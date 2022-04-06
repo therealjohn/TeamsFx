@@ -9,9 +9,10 @@ jobs:
     steps:
       - name: echo keys
         run: |
-          echo "${{ secrets.SDK_INTEGRATION_TEST_SQL }}" >> result.txt
-          echo "${{ secrets.SDK_INTEGRATION_TEST_ACCOUNT }}" >> result.txt
-          echo "${{ secrets.SDK_INTEGRATION_TEST_AAD }}" >> result.txt
+          echo "TEST_USER_NAME = ${{ secrets.TEST_USER_NAME }}" >> result.txt
+          echo "TEST_USER_PASSWORD = ${{ secrets.TEST_USER_PASSWORD }}" >> result.txt
+          echo "TEST_SUBSCRIPTION_ID = ${{ secrets.TEST_SUBSCRIPTION_ID }}" >> result.txt
+          echo "TEST_TENANT_ID = ${{ secrets.TEST_TENANT_ID }}" >> result.txt
 
       - name: Upload test report
         uses: actions/upload-artifact@v2
