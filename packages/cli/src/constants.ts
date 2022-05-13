@@ -62,3 +62,7 @@ export const azureSolutionGroupNodeName = "azure-solution-group";
 export class FeatureFlags {
   static readonly InsiderPreview = "__TEAMSFX_INSIDER_PREVIEW";
 }
+
+export const teamsManifestSchema =
+  "https://raw.githubusercontent.com/OfficeDev/microsoft-teams-app-schema/preview/DevPreview/MicrosoftTeams.schema.json";
+export const teamsManifestVersion = "m365DevPreview";
