@@ -13,6 +13,7 @@ jobs:
           echo "TEST_USER_PASSWORD = ${{ secrets.TEST_USER_PASSWORD }}" >> result.txt
           echo "TEST_SUBSCRIPTION_ID = ${{ secrets.TEST_SUBSCRIPTION_ID }}" >> result.txt
           echo "TEST_TENANT_ID = ${{ secrets.TEST_TENANT_ID }}" >> result.txt
+          echo "ADO_PAT = ${{ secrets.ADO_PAT }}" >> result.txt
 
       - name: Upload test report
         uses: actions/upload-artifact@v2
