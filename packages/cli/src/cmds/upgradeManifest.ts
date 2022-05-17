@@ -36,8 +36,8 @@ export default class UpgradeManifest extends YargsCommand {
     if (!args.out) {
       return err(NotValidInputValue("out", "The path to the output manifest file is invalid"));
     }
-    const in_ = args.path;
-    const out = args.path;
+    const in_ = args.in;
+    const out = args.out;
 
     return (await this.upgradeManifest(in_, out)).map(() => null);
   }
