@@ -24,12 +24,30 @@ export default class Publish extends YargsCommand {
 
   public builder(yargs: Argv): Argv<any> {
     this.params = HelpParamGenerator.getYargsParamForHelp(Stage.publish);
+    yargs.options("zip-path", {
+      description: `The path to the Teams manifest zip package.`,
+      type: "string",
+    });
+    yargs.options("app-id", {
+      description: `The path to the Teams manifest zip package.`,
+      type: "string",
+    });
     return yargs.version(false).options(this.params);
   }
 
   public async runCommand(args: {
     [argName: string]: string | string[];
   }): Promise<Result<null, FxError>> {
+    if (args["zip-path"] && args["app-id"]) {
+      const result = await activate();
+      if (result.isErr()) {
+        return err(result.error);
+      }
+      const core = result.value;
+      await core.publishManifestZipPackage(args["app-id"] as string, args["zip-path"] as string);
+
+      return ok(null);
+    }
     const answers = argsToInputs(this.params, args);
 
     const manifestFolderParamName = "manifest-folder";

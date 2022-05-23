@@ -300,6 +300,33 @@ export class AppStudioPluginV3 {
     return result;
   }
 
+  async publishManifestZipPackage(
+    teamsAppId: string,
+    zipPackagePath: string,
+    tokenProvider: AppStudioTokenProvider
+  ): Promise<Result<Void, FxError>> {
+    const token = await tokenProvider.getAccessToken();
+    if (!token) {
+      return err(
+        AppStudioResultFactory.SystemError("InvalidAccessToken", [
+          "invalid access token",
+          "invalid access token",
+        ])
+      );
+    }
+    const buf = await fs.readFile(zipPackagePath);
+    const appDef = await AppStudioClient.getAppByTeamsAppId(teamsAppId, token);
+    console.log(`Publishing manifest zip package for app ${teamsAppId}`);
+    if (appDef) {
+      console.log(`App ${teamsAppId} already exists, trying to update...`);
+      await AppStudioClient.publishTeamsAppUpdate(teamsAppId, buf, token);
+    } else {
+      await AppStudioClient.publishTeamsApp(teamsAppId, buf, token);
+    }
+    console.log(`Successfully published App ${teamsAppId}`);
+    return ok(Void);
+  }
+
   async publishTeamsApp(
     ctx: v2.Context,
     inputs: v2.InputsWithProjectPath,

@@ -33,11 +33,8 @@ export default class UpgradeManifest extends YargsCommand {
     if (!args.in) {
       return err(NotValidInputValue("in", "The path to the Teams manifest file is invalid"));
     }
-    if (!args.out) {
-      return err(NotValidInputValue("out", "The path to the output manifest file is invalid"));
-    }
     const in_ = args.in;
-    const out = args.out;
+    const out = args.out ?? "";
 
     return (await this.upgradeManifest(in_, out)).map(() => null);
   }
@@ -55,7 +52,11 @@ export default class UpgradeManifest extends YargsCommand {
       if (!!manifest?.webApplicationInfo?.applicationPermissions) {
         manifest.webApplicationInfo.applicationPermissions = undefined;
       }
-      await fs.writeJSON(outPath, manifest, { spaces: 4, EOL: os.EOL });
+      if (outPath) {
+        await fs.writeJSON(outPath, manifest, { spaces: 4, EOL: os.EOL });
+      } else {
+        process.stdout.write(JSON.stringify(manifest, null, 4));
+      }
       return ok(Void);
     } catch (e: any) {
       return err(

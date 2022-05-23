@@ -711,6 +711,20 @@ export class FxCore implements v3.ICore {
     if (isV3()) return this.publishApplicationV3(inputs);
     else return this.publishApplicationV2(inputs);
   }
+
+  async publishManifestZipPackage(
+    teamsAppId: string,
+    zipPath: string
+  ): Promise<Result<Void, FxError>> {
+    const appStudioV3 = Container.get<AppStudioPluginV3>(BuiltInFeaturePluginNames.appStudio);
+    await appStudioV3.publishManifestZipPackage(
+      teamsAppId,
+      zipPath,
+      TOOLS.tokenProvider.appStudioToken
+    );
+    return ok(Void);
+  }
+
   @hooks([
     ErrorHandlerMW,
     ConcurrentLockerMW,
