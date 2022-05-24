@@ -19,8 +19,6 @@ const config = {
   entry: {
     extension: "./src/extension.ts", // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
     // client: "./src/controls/index.tsx",
-    packageJsonHelper:
-      "./node_modules/@microsoft/teamsfx-core/build/common/local/packageJsonHelper.js",
     migrationHandler: "./src/migration/migrationHandler.ts",
     tree: "./src/treeview/webViewProvider/tree.tsx",
   },
@@ -36,7 +34,6 @@ const config = {
   externals: {
     vscode: "commonjs vscode", // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
     keytar: "keytar",
-    "./packageJsonHelper": "commonjs ./packageJsonHelper",
     "./migration/migrationHandler": "commonjs ./migrationHandler",
   },
   resolve: {

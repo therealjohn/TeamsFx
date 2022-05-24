@@ -17,7 +17,7 @@ import * as util from "util";
 import { localize } from "../utils/localizeUtils";
 const PackageJson = require("@npmcli/package-json");
 
-export class TeamsAppMigrationHandler {
+export default class TeamsAppMigrationHandler {
   private static readonly excludeFolders = new Set<string>(["node_modules", ".git"]);
 
   private readonly sourcePath: string;

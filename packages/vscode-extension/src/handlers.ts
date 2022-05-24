@@ -117,7 +117,6 @@ import * as exp from "./exp/index";
 import { TreatmentVariables } from "./exp/treatmentVariables";
 import { VS_CODE_UI } from "./extension";
 import { ext } from "./extensionVariables";
-import { TeamsAppMigrationHandler } from "./migration/migrationHandler";
 import { ExtTelemetry } from "./telemetry/extTelemetry";
 import {
   AccountType,
@@ -2911,6 +2910,7 @@ export async function migrateTeamsTabAppHandler(): Promise<Result<null, FxError>
   );
   await progressBar.start();
 
+  const { default: TeamsAppMigrationHandler } = await import("./migration/migrationHandler");
   const migrationHandler = new TeamsAppMigrationHandler(tabAppPath);
   let result: Result<null, FxError> = ok(null);
   let packageUpdated: Result<boolean, FxError> = ok(true);
@@ -3022,6 +3022,7 @@ export async function migrateTeamsManifestHandler(): Promise<Result<null, FxErro
   );
   await progressBar.start();
 
+  const { default: TeamsAppMigrationHandler } = await import("./migration/migrationHandler");
   const migrationHandler = new TeamsAppMigrationHandler(manifestPath);
   let result: Result<null, FxError> = ok(null);
 
