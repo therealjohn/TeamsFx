@@ -1167,6 +1167,7 @@
     "uuid": "^8.3.2",
     "verdaccio": "^5.6.2",
     "vsce": "^2.7.0",
+    "vscode-test": "^1.6.1",
     "webfont": "^11.2.26",
     "webpack": "^5.38.1",
     "webpack-cli": "^4.7.2",
@@ -1195,8 +1196,7 @@
     "sudo-prompt": "^9.2.1",
     "underscore": "^1.12.1",
     "validator": "^13.7.0",
-    "vscode-tas-client": "^0.1.47",
-    "vscode-test": "^1.5.2"
+    "vscode-tas-client": "^0.1.47"
   },
   "extensionDependencies": [
     "ms-vscode.azure-account"
