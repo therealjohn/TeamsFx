@@ -37,13 +37,15 @@ public class TeamsBotSsoPrompt : Dialog
     /// <see cref="DialogSet"/> or <see cref="ComponentDialog"/> to which the prompt is added.</remarks>
     public TeamsBotSsoPrompt(String dialogId, TeamsBotSsoPromptSettings settings): base(dialogId)
     {
-        _logger.LogInformation("Create teams bot sso prompt");
+        _logger.LogInformation("Create a teams bot sso prompt");
         if (string.IsNullOrWhiteSpace(dialogId))
         {
             throw new ArgumentNullException(nameof(dialogId));
         }
 
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        
+        // todo: load and validate configuration from env.
     }
 
 
@@ -67,7 +69,7 @@ public class TeamsBotSsoPrompt : Dialog
             throw new ArgumentNullException(nameof(dc));
         }
 
-        this.EnsureMsTeamsChannel(dc);
+        EnsureMsTeamsChannel(dc);
 
         // Initialize state
         var timeout = _settings.Timeout ?? (int)TurnStateConstants.OAuthLoginTimeoutValue.TotalMilliseconds;
@@ -84,7 +86,7 @@ public class TeamsBotSsoPrompt : Dialog
     /// For details see https://docs.microsoft.com/en-us/microsoftteams/platform/bots/how-to/authentication/auth-aad-sso-bots.
     /// </summary>
     /// <param name="context">ITurnContext</param>
-    /// <returns></returns>
+    /// <returns>The task to await.</returns>
     private async Task SendOAuthCardToObtainTokenAsync(ITurnContext context)
     {
         _logger.LogDebug("Send OAuth card to get SSO token");
