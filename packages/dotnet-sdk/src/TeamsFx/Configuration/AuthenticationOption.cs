@@ -28,6 +28,25 @@ public class AuthenticationOptions
     public string ClientSecret { get; set; }
 
     /// <summary>
+    /// AAD tenant id.
+    /// </summary>
+    [Required(ErrorMessage = "Tenant id is required")]
+    [RegularExpression(@"^[0-9A-Fa-f\-]{36}$")]
+    public string TenantId { get; set; }
+
+    /// <summary>
+    /// Login page for Teams to redirect to.
+    /// </summary>
+    [Required(ErrorMessage = "Initiate login endpoint is required")]
+    public string InitiateLoginEndpoint { get; set; }
+
+    /// <summary>
+    /// Application ID URI.
+    /// </summary>
+    [Required(ErrorMessage = "Application id uri is required")]
+    public string ApplicationIdUri { get; set; }
+
+    /// <summary>
     /// Authority URL that is used in OAuth On-behalf-of flow.
     /// </summary>
     [RegularExpression(@"^http(s)?://[-a-zA-Z0-9@:%._\+~#=/]{1,100}$")]

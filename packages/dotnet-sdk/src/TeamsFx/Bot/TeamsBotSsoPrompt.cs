@@ -5,6 +5,8 @@ using Microsoft.Bot.Builder.Teams;
 using Microsoft.Bot.Schema.Teams;
 using Microsoft.Bot.Schema;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Options;
+using Microsoft.TeamsFx.Configuration;
 
 namespace Microsoft.TeamsFx;
 
@@ -21,6 +23,7 @@ namespace Microsoft.TeamsFx;
 public class TeamsBotSsoPrompt : Dialog
 {
     private TeamsBotSsoPromptSettings _settings;
+    private readonly AuthenticationOptions _authenticationOptions;
     private const string PersistedExpires = "expires";
     #region Util
     private readonly ILogger<TeamsBotSsoPrompt> _logger;
@@ -30,12 +33,14 @@ public class TeamsBotSsoPrompt : Dialog
     /// <summary>
     /// Initializes a new instance of the <see cref="TeamsBotSsoPrompt"/> class.
     /// </summary>
+    /// <param name="authenticationOptions">Authentication options filled by DI.</param>
     /// <param name="dialogId">The ID to assign to this prompt.</param>
     /// <param name="settings">Additional OAuth settings to use with this instance of the prompt.
     /// custom validation for this prompt.</param>
     /// <remarks>The value of <paramref name="dialogId"/> must be unique within the
     /// <see cref="DialogSet"/> or <see cref="ComponentDialog"/> to which the prompt is added.</remarks>
-    public TeamsBotSsoPrompt(String dialogId, TeamsBotSsoPromptSettings settings): base(dialogId)
+    public TeamsBotSsoPrompt(string dialogId, TeamsBotSsoPromptSettings settings,
+        IOptions<AuthenticationOptions> authenticationOptions) : base(dialogId)
     {
         _logger.LogInformation("Create a teams bot sso prompt");
         if (string.IsNullOrWhiteSpace(dialogId))
@@ -44,8 +49,7 @@ public class TeamsBotSsoPrompt : Dialog
         }
 
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-        
-        // todo: load and validate configuration from env.
+        _authenticationOptions = authenticationOptions.Value;
     }
 
 
@@ -132,20 +136,14 @@ public class TeamsBotSsoPrompt : Dialog
     private SignInResource GetSignInResource(string loginHint)
     {
         _logger.LogDebug("Get sign in authentication configuration");
-        // todo: get configuration from env 
-        string initiateLoginEndpoint = "";
-        string clientId = "";
-        string tenantId = "";
-        string applicationIdUri = "";
-
-        string signInLink = $"{initiateLoginEndpoint}?scope={Uri.EscapeDataString(string.Join(" ", _settings.Scopes))}&clientId={clientId}&tenantId={tenantId}&loginHint={loginHint}";
+        string signInLink = $"{_authenticationOptions.InitiateLoginEndpoint}?scope={Uri.EscapeDataString(string.Join(" ", _settings.Scopes))}&clientId={_authenticationOptions.ClientId}&tenantId={_authenticationOptions.TenantId}&loginHint={loginHint}";
         _logger.LogDebug("Sign in link: " + signInLink);
 
         SignInResource signInResource = new SignInResource {
             SignInLink = signInLink,
             TokenExchangeResource = new TokenExchangeResource {
                 Id = Guid.NewGuid().ToString(),
-                Uri = Regex.Replace(applicationIdUri, @"/\/$/", "/access_as_user")
+                Uri = Regex.Replace(_authenticationOptions.ApplicationIdUri, @"/\/$/", "/access_as_user")
             }
         };
         _logger.LogDebug("Token exchange resource uri: " + signInResource.TokenExchangeResource.Uri);
