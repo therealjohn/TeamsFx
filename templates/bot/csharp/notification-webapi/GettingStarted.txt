@@ -20,8 +20,9 @@ Notes: your M365 account need to have the sideloading permission to ensure Teams
 
 4. Once Microsoft Teams is loaded, select the "Add" button to install your app in Teams.
 
-5. Post HTTP request to http://localhost:5130/api/notification to trigger notification. You can use any HTTP tool: command line, PowerShell, etc.
+5. Post HTTP request to http://localhost:5130/api/notification to trigger notification. You can use any API tool: curl, Postman, etc.
 
+Tips: if you made changes to Teams manifest file (/tempaltes/appPackage/manifest.templates.json), in order to see the changes apply to your local manifest file, ensure you run the "Prepare Teams app dependencies" command before trying to locally run the Teams app again.
 
 Deploy your Teams app on Azure
 ------------------------------------
@@ -42,7 +43,6 @@ Report an issue
 ---------------
 
 If you encountered any problem while you are building Teams app using Teams Toolkit, you can create an issue in our GitHub repository: https://github.com/OfficeDev/TeamsFx/issues
-
 
 Q&A
 ---------------
