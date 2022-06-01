@@ -29,7 +29,6 @@ public static class TeamsFxConfigurationMethods
         services.AddOptions();
         services.AddScoped<TeamsFx.TeamsFx>();
         services.AddScoped<TeamsUserCredential>();
-        services.AddScoped<TeamsBotSsoPrompt>();
 
         services.AddOptions<AuthenticationOptions>().Bind(namedConfigurationSection.GetSection(AuthenticationOptions.Authentication)).ValidateDataAnnotations();
 
@@ -59,7 +58,6 @@ public static class TeamsFxConfigurationMethods
         services.AddOptions();
         services.AddScoped<TeamsFx.TeamsFx>();
         services.AddScoped<TeamsUserCredential>();
-        services.AddScoped<TeamsBotSsoPrompt>();
 
         services.Configure(configureOptions);
         services.AddOptions<AuthenticationOptions>()
@@ -92,7 +90,6 @@ public static class TeamsFxConfigurationMethods
         services.AddOptions();
         services.AddScoped<TeamsFx.TeamsFx>();
         services.AddScoped<TeamsUserCredential>();
-        services.AddScoped<TeamsBotSsoPrompt>();
 
         services.AddOptions<AuthenticationOptions>()
             .Configure(options => {

@@ -1,4 +1,7 @@
-﻿using Microsoft.Bot.Builder;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Bot.Builder.Teams;
@@ -35,21 +38,39 @@ public class TeamsBotSsoPrompt : Dialog
     /// </summary>
     /// <param name="authenticationOptions">Authentication options filled by DI.</param>
     /// <param name="dialogId">The ID to assign to this prompt.</param>
+    /// <param name="logger">Logger of TeamsBotSsoPrompt Class.</param>
     /// <param name="settings">Additional OAuth settings to use with this instance of the prompt.
     /// custom validation for this prompt.</param>
     /// <remarks>The value of <paramref name="dialogId"/> must be unique within the
     /// <see cref="DialogSet"/> or <see cref="ComponentDialog"/> to which the prompt is added.</remarks>
     public TeamsBotSsoPrompt(string dialogId, TeamsBotSsoPromptSettings settings,
+        ILogger<TeamsBotSsoPrompt> logger,
         IOptions<AuthenticationOptions> authenticationOptions) : base(dialogId)
     {
-        _logger.LogInformation("Create a teams bot sso prompt");
+        _logger = logger;
         if (string.IsNullOrWhiteSpace(dialogId))
         {
             throw new ArgumentNullException(nameof(dialogId));
         }
 
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-        _authenticationOptions = authenticationOptions.Value;
+
+        if (authenticationOptions == null)
+        {
+            throw new ArgumentNullException(nameof(authenticationOptions));
+        }
+        try
+        {
+            _logger.LogTrace("Validate authentication configuration");
+            _authenticationOptions = authenticationOptions.Value;
+        }
+        catch (OptionsValidationException e)
+        {
+            throw new ExceptionWithCode($"Authentication config is missing or not correct with error: {e.Message}", ExceptionCode.InvalidConfiguration);
+        }
+
+     
+        _logger.LogInformation("Create a teams bot sso prompt");
     }
 
 
@@ -76,9 +97,8 @@ public class TeamsBotSsoPrompt : Dialog
         EnsureMsTeamsChannel(dc);
 
         // Initialize state
-        var timeout = _settings.Timeout ?? (int)TurnStateConstants.OAuthLoginTimeoutValue.TotalMilliseconds;
         var state = dc.ActiveDialog.State;
-        state[PersistedExpires] = DateTime.UtcNow.AddMilliseconds(timeout);
+        state[PersistedExpires] = DateTime.UtcNow.AddMilliseconds(_settings.Timeout);
 
         // Send OAuthCard that tells Teams to obtain an authentication token for the bot application.
         await SendOAuthCardToObtainTokenAsync(dc.Context).ConfigureAwait(false);

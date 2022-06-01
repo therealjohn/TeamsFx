@@ -1,4 +1,7 @@
-﻿namespace Microsoft.TeamsFx;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace Microsoft.TeamsFx;
 
 /// <summary>
 /// Contains settings for an <see cref="TeamsBotSsoPrompt"/>.
@@ -16,18 +19,17 @@ public class TeamsBotSsoPromptSettings
     /// Default is 900,000 (15 minutes).
     /// </summary>
     /// <value>The number of milliseconds the prompt waits for the user to authenticate.</value>
-    public int? Timeout { get; set; }
+    public int Timeout { get; set; } = (int)TimeSpan.FromMinutes(15).TotalMilliseconds;
 
     /// <summary>
     /// Gets or sets a value indicating whether the <see cref="TeamsBotSsoPrompt"/> should end upon
-    /// receiving an invalid message.  Generally the <see cref="TeamsBotSsoPrompt"/> will ignore
-    /// incoming messages from the user during the auth flow, if they are not related to the
-    /// auth flow.  This flag enables ending the <see cref="TeamsBotSsoPrompt"/> rather than
-    /// ignoring the user's message.  Typically, this flag will be set to 'true', but is 'false'
-    /// by default for backwards compatibility.
+    /// receiving an invalid message.  Generally the <see cref="TeamsBotSsoPrompt"/> will end 
+    /// the auth flow when receives user message not related to the auth flow.
+    /// Setting the flag to false ignores the user's message instead.
+    /// Defaults to value `true`
     /// </summary>
     /// <value>True if the <see cref="TeamsBotSsoPrompt"/> should automatically end upon receiving
     /// an invalid message.</value>
-    public bool EndOnInvalidMessage { get; set; }
+    public bool EndOnInvalidMessage { get; set; } = true;
 
 }
