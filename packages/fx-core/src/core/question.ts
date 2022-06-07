@@ -61,7 +61,8 @@ export enum CoreQuestionNames {
   ExistingTabEndpoint = "existing-tab-endpoint",
 }
 
-export const ProjectNamePattern = "^[a-zA-Z][\\da-zA-Z]+$";
+// eslint-disable-next-line prettier/prettier
+export const ProjectNamePattern = '^[a-zA-Z][^"<>:\\?/*|\u0000—\u001F]*[\\da-zA-Z]+[^"\\s.<>:\\?/*|\u0000—\u001F]*$';
 
 export function createAppNameQuestion(validateProjectPathExistence = true): TextInputQuestion {
   const question: TextInputQuestion = {

@@ -634,7 +634,7 @@ export class AppStudioPluginImpl {
       const hasAad = isAADEnabled(solutionSettings);
       const isM365 = ctx.projectSettings?.isM365;
       manifest = await createManifest(
-        ctx.projectSettings!.appName,
+        ctx.projectSettings!.appName, // TODO: update. not used...
         hasFrontend,
         hasBot,
         hasNotificationBot,
@@ -1919,7 +1919,7 @@ export async function createLocalManifest(
   hasAad = true,
   isM365 = false
 ): Promise<TeamsAppManifest> {
-  let name = appName;
+  let name = appName; // Name is app Name -> no need to change
   const suffix = "-local-debug";
   if (suffix.length + appName.length <= TEAMS_APP_SHORT_NAME_MAX_LENGTH) {
     name = name + suffix;

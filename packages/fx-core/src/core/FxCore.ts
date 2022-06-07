@@ -149,13 +149,14 @@ import {
   sendErrorTelemetryThenReturnError,
 } from "./telemetry";
 import { CoreHookContext } from "./types";
-import { isPreviewFeaturesEnabled } from "../common";
+import { isPreviewFeaturesEnabled, ProjectSettingsHelper } from "../common";
 import { runAction } from "../component/workflow";
 import { TemplateProjectsScenarios } from "../plugins/resource/bot/constants";
 import { createContextV3 } from "../component/utils";
 import "../component/core";
 import { QuestionModelMW_V3 } from "./middleware/questionModelV3";
 import { ProjectVersionCheckerMW } from "./middleware/projectVersionChecker";
+import { convertToValidProjectSettingsAppName } from "../common/utils";
 
 export class FxCore implements v3.ICore {
   tools: Tools;
@@ -244,8 +245,9 @@ export class FxCore implements v3.ICore {
         return err(basicFolderRes.error);
       }
 
+      const projectSettingsAppName = convertToValidProjectSettingsAppName(appName);
       const projectSettings: ProjectSettings = {
-        appName: appName,
+        appName: projectSettingsAppName,
         projectId: inputs.projectId ? inputs.projectId : uuid.v4(),
         version: getProjectSettingsVersion(),
         isFromSample: false,
@@ -266,6 +268,7 @@ export class FxCore implements v3.ICore {
       globalVars.isVS = isVSProject(projectSettings);
       ctx.projectSettings = projectSettings;
       const createEnvResult = await this.createEnvWithName(
+        appName,
         environmentManager.getDefaultEnvName(),
         projectSettings,
         inputs
@@ -276,6 +279,7 @@ export class FxCore implements v3.ICore {
 
       if (isConfigUnifyEnabled()) {
         const createLocalEnvResult = await this.createEnvWithName(
+          appName,
           environmentManager.getLocalEnvName(),
           projectSettings,
           inputs
@@ -423,7 +427,7 @@ export class FxCore implements v3.ICore {
     ProjectConsolidateMW,
     AadManifestMigrationMW,
     ProjectVersionCheckerMW,
-    ProjectSettingsLoaderMW,
+    ProjectSettingsLoaderMW, //READ project setting
     EnvInfoLoaderMW(false),
     SolutionLoaderMW,
     QuestionModelMW,
@@ -1237,6 +1241,7 @@ export class FxCore implements v3.ICore {
     ContextInjectorMW,
   ])
   async createEnv(inputs: Inputs, ctx?: CoreHookContext): Promise<Result<Void, FxError>> {
+    // Create new env. TODO: verify
     if (!ctx) return err(new ObjectIsUndefinedError("createEnv input stuff"));
     const projectSettings = ctx.projectSettings;
     if (!projectSettings) {
@@ -1278,12 +1283,14 @@ export class FxCore implements v3.ICore {
   }
 
   async createEnvWithName(
+    manifestAppName: string,
     targetEnvName: string,
     projectSettings: ProjectSettings,
     inputs: Inputs,
     existingTabEndpoint?: string
   ): Promise<Result<Void, FxError>> {
-    let appName = projectSettings.appName;
+    // let appName = projectSettings.appName; //TODO: update
+    let appName = manifestAppName;
     if (targetEnvName === environmentManager.getLocalEnvName()) {
       appName = getLocalAppName(appName);
     }
@@ -1419,7 +1426,7 @@ export class FxCore implements v3.ICore {
 
     // create ProjectSettings
     const projectSettings = newProjectSettings();
-    projectSettings.appName = appName;
+    projectSettings.appName = convertToValidProjectSettingsAppName(appName); // I just converted it.
     ctx.projectSettings = projectSettings;
 
     // create folder structure
@@ -1443,7 +1450,7 @@ export class FxCore implements v3.ICore {
     }
 
     // init manifest
-    const manifestInitRes = await appStudioV3.init(context, inputs as v2.InputsWithProjectPath);
+    const manifestInitRes = await appStudioV3.init(context, inputs as v2.InputsWithProjectPath); // WHY?
     if (manifestInitRes.isErr()) return err(manifestInitRes.error);
 
     const manifestAddcapRes = await appStudioV3.addCapabilities(
@@ -1456,6 +1463,7 @@ export class FxCore implements v3.ICore {
     // create env config with existing tab's endpoint
     const endpoint = inputs[CoreQuestionNames.ExistingTabEndpoint] as string;
     const createEnvResult = await this.createEnvWithName(
+      appName,
       environmentManager.getDefaultEnvName(),
       projectSettings,
       inputs,
@@ -1465,6 +1473,7 @@ export class FxCore implements v3.ICore {
       return err(createEnvResult.error);
     }
     const createLocalEnvResult = await this.createEnvWithName(
+      appName,
       environmentManager.getLocalEnvName(),
       projectSettings,
       inputs,
