@@ -634,7 +634,7 @@ export class AppStudioPluginImpl {
       const hasAad = isAADEnabled(solutionSettings);
       const isM365 = ctx.projectSettings?.isM365;
       manifest = await createManifest(
-        ctx.projectSettings!.appName,
+        ctx.projectSettings!.appName, // TODO: update. not used...
         hasFrontend,
         hasBot,
         hasNotificationBot,
