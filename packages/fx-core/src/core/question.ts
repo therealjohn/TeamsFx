@@ -61,8 +61,8 @@ export enum CoreQuestionNames {
   ExistingTabEndpoint = "existing-tab-endpoint",
 }
 
-// eslint-disable-next-line prettier/prettier
-export const ProjectNamePattern = '^[a-zA-Z][^"<>:\\?/*|\u0000—\u001F]*[\\da-zA-Z]+[^"\\s.<>:\\?/*|\u0000—\u001F]*$';
+export const ProjectNamePattern =
+  '^(?=(.*[\\da-zA-Z]){2})[a-zA-Z][^"<>:\\?/*|\u0000-\u001F]*[^"\\s.<>:\\?/*|\u0000-\u001F]$$';
 
 export function createAppNameQuestion(validateProjectPathExistence = true): TextInputQuestion {
   const question: TextInputQuestion = {
@@ -79,7 +79,7 @@ export function createAppNameQuestion(validateProjectPathExistence = true): Text
         const validateResult = jsonschema.validate(appName, schema);
         if (validateResult.errors && validateResult.errors.length > 0) {
           if (validateResult.errors[0].name === "pattern") {
-            return getLocalizedString("core.QuestionAppName.validation.pattern");
+            return getLocalizedString("core.QuestionAppName.validation.pattern"); // TODO: update string
           }
           if (validateResult.errors[0].name === "maxLength") {
             return getLocalizedString("core.QuestionAppName.validation.maxlength");

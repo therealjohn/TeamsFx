@@ -184,11 +184,25 @@ describe("App name question", async () => {
   const question = createAppNameQuestion();
   const validFunc = (question.validation as FuncValidation<string>).validFunc;
 
+  //   it("app name exceed maxlength of 30", async () => {
+  //   const input = "a-";
+  //   const result = await validFunc(input);
+
+  //   chai.assert.equal(result, getLocalizedString("core.QuestionAppName.validation.pattern"));
+  // });
+
   it("app name exceed maxlength of 30", async () => {
     const input = "SurveyMonkeyWebhookNotification";
     const result = await validFunc(input);
 
     chai.assert.equal(result, getLocalizedString("core.QuestionAppName.validation.maxlength"));
+  });
+
+  it("app name with only letters", async () => {
+    const input = "app";
+    const result = await validFunc(input);
+
+    chai.assert.isUndefined(result);
   });
 
   it("app name starting with digit", async () => {
@@ -209,28 +223,28 @@ describe("App name question", async () => {
     const input = "app.123";
     const result = await validFunc(input);
 
-    chai.assert.equal(result, undefined);
+    chai.assert.isUndefined(result);
   });
 
   it("app name containing hyphen", async () => {
     const input = "app-123";
     const result = await validFunc(input);
 
-    chai.assert.equal(result, undefined);
+    chai.assert.isUndefined(result);
   });
 
   it("app name containing multiple special characters", async () => {
     const input = "a..(1";
     const result = await validFunc(input);
 
-    chai.assert.equal(result, undefined);
+    chai.assert.isUndefined(result);
   });
 
   it("app name containing space", async () => {
     const input = "app 123";
     const result = await validFunc(input);
 
-    chai.assert.equal(result, undefined);
+    chai.assert.isUndefined(result);
   });
 
   it("app name containing dot at the end - wrong pattern", async () => {
@@ -248,7 +262,7 @@ describe("App name question", async () => {
   });
 
   it("app name containing invalid control code", async () => {
-    const input = "a\u0001a"; // will fail
+    const input = "a\u0001a";
     const result = await validFunc(input);
 
     chai.assert.equal(result, getLocalizedString("core.QuestionAppName.validation.pattern"));

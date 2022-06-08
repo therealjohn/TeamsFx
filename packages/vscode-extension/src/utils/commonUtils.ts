@@ -17,6 +17,7 @@ import {
   ProjectSettingsFileName,
   StatesFolderName,
   SubscriptionInfo,
+  DevConfigFileName,
 } from "@microsoft/teamsfx-api";
 import {
   environmentManager,
@@ -132,11 +133,11 @@ export function getAppName(): string | undefined {
     ws,
     `.${ConfigFolderName}`,
     InputConfigsFolderName,
-    ProjectSettingsFileName
+    DevConfigFileName
   );
   try {
     const settingsJson = JSON.parse(fs.readFileSync(settingsJsonPathNew, "utf8"));
-    return settingsJson.appName;
+    return settingsJson.manifest.appName.short;
   } catch (e) {}
   return undefined;
 }
