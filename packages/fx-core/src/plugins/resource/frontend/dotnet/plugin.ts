@@ -49,8 +49,13 @@ import { ArmTemplateResult } from "../../../../common/armInterface";
 import { PluginImpl } from "../interface";
 import { ProgressHelper } from "../utils/progress-helper";
 import { WebappDeployProgress as DeployProgress } from "./resources/steps";
-import { BotOptionItem, TabOptionItem } from "../../../solution/fx-solution/question";
+import {
+  AzureSolutionQuestionNames,
+  BotOptionItem,
+  TabOptionItem,
+} from "../../../solution/fx-solution/question";
 import { PluginNames } from "../../../solution/fx-solution/constants";
+import { CoreQuestionNames } from "../../../../core/question";
 
 type Site = WebSiteManagementModels.Site;
 type TeamsFxResult = Result<any, FxError>;
@@ -111,11 +116,16 @@ export class DotnetPluginImpl implements PluginImpl {
     if (!ctx.projectSettings) {
       throw new NoProjectSettingError();
     }
-    const projectName = ctx.projectSettings!.appName;
-    await scaffoldFromZipPackage(ctx.root, new TemplateInfo({ ProjectName: projectName }));
+
+    const projectName = ctx.answers?.[CoreQuestionNames.AppName];
+    const safeProjectName = ctx.answers?.[CoreQuestionNames.SafeProjectName];
+    await scaffoldFromZipPackage(
+      ctx.root,
+      new TemplateInfo({ ProjectName: projectName, SafeProjectName: safeProjectName })
+    );
     ctx.projectSettings.pluginSettings = {
       ...ctx.projectSettings?.pluginSettings,
-      projectFilePath: path.join(ctx.root, PathInfo.projectFilename(ctx.projectSettings.appName)),
+      projectFilePath: path.join(ctx.root, PathInfo.projectFilename(projectName)),
     };
 
     Logger.info(Messages.EndScaffold);

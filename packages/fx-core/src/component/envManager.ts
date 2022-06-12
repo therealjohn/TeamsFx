@@ -51,7 +51,7 @@ export class EnvManager {
       execute: async (context: ContextV3, inputs: InputsWithProjectPath) => {
         const envName = inputs.envName || environmentManager.getDefaultEnvName();
         const envConfig = environmentManager.newEnvConfigData(
-          context.projectSetting.appName,
+          context.projectSetting.appName, // v3
           undefined
         );
         const envConfigPath = path.join(

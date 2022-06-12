@@ -209,6 +209,7 @@ export function checkAndSavePluginSetting(
 
 export function checkAndSavePluginSettingV2(
   context: Context,
+  projectFilePath: string,
   key: string,
   value: ConfigValue
 ): void {
@@ -224,6 +225,7 @@ export function checkAndSavePluginSettingV2(
     context.projectSetting.pluginSettings[PluginBot.PLUGIN_NAME] = {};
   }
   context.projectSetting.pluginSettings[PluginBot.PLUGIN_NAME][key] = value;
+  context.projectSetting.pluginSettings[PluginBot.PROJECT_FILE_PATH] = projectFilePath;
 }
 
 export function existsInEnumValues<T extends string>(

@@ -20,6 +20,7 @@ import { executeConcurrently } from "./executor";
 import {
   ensurePermissionRequest,
   extractSolutionInputs,
+  getAppNameFromEnvInfo,
   getAzureSolutionSettings,
   getSelectedPlugins,
   isAzureProject,
@@ -320,7 +321,7 @@ async function provisionResourceImpl(
       delete envInfo.state[GLOBAL_CONFIG][ARM_TEMPLATE_OUTPUT];
     }
 
-    const msg = getLocalizedString("core.provision.successNotice", ctx.projectSetting.appName);
+    const msg = getLocalizedString("core.provision.successNotice", getAppNameFromEnvInfo(envInfo));
     ctx.logProvider?.info(msg);
     if (!isExistingTabApp(ctx.projectSetting)) {
       const url = getResourceGroupInPortal(

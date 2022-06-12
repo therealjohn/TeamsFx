@@ -38,6 +38,7 @@ import { askForDeployConsent } from "../v3/provision";
 import { executeConcurrently, NamedThunk } from "./executor";
 import {
   extractSolutionInputs,
+  getAppNameFromEnvInfo,
   getAzureSolutionSettings,
   getBotTroubleShootMessage,
   getSelectedPlugins,
@@ -210,9 +211,10 @@ export async function deploy(
   const result = await executeConcurrently(thunks, ctx.logProvider);
 
   if (result.kind === "success") {
+    const appName = getAppNameFromEnvInfo(envInfo);
     if (inAzureProject) {
       let msg =
-        getLocalizedString("core.deploy.successNotice", ctx.projectSetting.appName) +
+        getLocalizedString("core.deploy.successNotice", appName) +
         botTroubleShootMsg.textForLogging;
 
       if (isDeployAADManifestFromVSCode) {
@@ -224,7 +226,7 @@ export async function deploy(
         ctx.userInteraction
           .showMessage(
             "info",
-            `${getLocalizedString("core.deploy.successNotice", ctx.projectSetting.appName)} ${
+            `${getLocalizedString("core.deploy.successNotice", appName)} ${
               botTroubleShootMsg.textForMsgBox
             }`,
             false,

@@ -185,7 +185,7 @@ async function _scaffold(ctx: PluginContext, progressBar: ProgressBar): Promise<
     ctx.telemetryReporter,
     ctx.logProvider
   );
-  const appName = AssertNotEmpty("projectSettings.appName", ctx?.projectSettings?.appName);
+  const appName = AssertNotEmpty("projectSettings.appName", ctx?.projectSettings?.appName); // todo: what is apim
   await progressBar.next(ProgressStep.Scaffold, ProgressMessages[ProgressStep.Scaffold].Scaffold);
   await scaffoldManager.scaffold(appName, ctx.root);
 }

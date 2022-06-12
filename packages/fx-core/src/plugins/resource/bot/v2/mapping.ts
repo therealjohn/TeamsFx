@@ -106,11 +106,3 @@ export function getTriggerScenarios(trigger: string): string[] {
   }
   throw new Error(invalidInputMsg);
 }
-
-export function getProjectFileName(runtime: Runtime, appName: string): string {
-  const projectFileName = projectFileMap.get(runtime);
-  if (projectFileName) {
-    return projectFileName(appName);
-  }
-  throw new Error(invalidInputMsg);
-}
