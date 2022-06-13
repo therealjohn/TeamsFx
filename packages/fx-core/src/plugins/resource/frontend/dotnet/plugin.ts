@@ -49,11 +49,7 @@ import { ArmTemplateResult } from "../../../../common/armInterface";
 import { PluginImpl } from "../interface";
 import { ProgressHelper } from "../utils/progress-helper";
 import { WebappDeployProgress as DeployProgress } from "./resources/steps";
-import {
-  AzureSolutionQuestionNames,
-  BotOptionItem,
-  TabOptionItem,
-} from "../../../solution/fx-solution/question";
+import { BotOptionItem, TabOptionItem } from "../../../solution/fx-solution/question";
 import { PluginNames } from "../../../solution/fx-solution/constants";
 import { CoreQuestionNames } from "../../../../core/question";
 
