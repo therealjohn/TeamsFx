@@ -184,13 +184,6 @@ describe("App name question", async () => {
   const question = createAppNameQuestion();
   const validFunc = (question.validation as FuncValidation<string>).validFunc;
 
-  //   it("app name exceed maxlength of 30", async () => {
-  //   const input = "a-";
-  //   const result = await validFunc(input);
-
-  //   chai.assert.equal(result, getLocalizedString("core.QuestionAppName.validation.pattern"));
-  // });
-
   it("app name exceed maxlength of 30", async () => {
     const input = "SurveyMonkeyWebhookNotification";
     const result = await validFunc(input);

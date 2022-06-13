@@ -90,7 +90,7 @@ export function convertToAppDefinition(appManifest: TeamsAppManifest): AppDefini
   appDefinition.isFullScreen = appManifest.isFullScreen;
   appDefinition.appId = appManifest.id;
 
-  appDefinition.appName = appManifest.name.short; // TODO: need to verify app studio
+  appDefinition.appName = appManifest.name.short;
   appDefinition.shortName = appManifest.name.short;
   appDefinition.longName = appManifest.name.full;
   appDefinition.manifestVersion = appManifest.manifestVersion;

@@ -427,7 +427,7 @@ export class FxCore implements v3.ICore {
     ProjectConsolidateMW,
     AadManifestMigrationMW,
     ProjectVersionCheckerMW,
-    ProjectSettingsLoaderMW, //READ project setting
+    ProjectSettingsLoaderMW,
     EnvInfoLoaderMW(false),
     SolutionLoaderMW,
     QuestionModelMW,
@@ -1241,7 +1241,6 @@ export class FxCore implements v3.ICore {
     ContextInjectorMW,
   ])
   async createEnv(inputs: Inputs, ctx?: CoreHookContext): Promise<Result<Void, FxError>> {
-    // Create new env. TODO: verify
     if (!ctx) return err(new ObjectIsUndefinedError("createEnv input stuff"));
     const projectSettings = ctx.projectSettings;
     if (!projectSettings) {
@@ -1289,7 +1288,6 @@ export class FxCore implements v3.ICore {
     inputs: Inputs,
     existingTabEndpoint?: string
   ): Promise<Result<Void, FxError>> {
-    // let appName = projectSettings.appName; //TODO: update
     let appName = manifestAppName;
     if (targetEnvName === environmentManager.getLocalEnvName()) {
       appName = getLocalAppName(appName);
@@ -1426,7 +1424,7 @@ export class FxCore implements v3.ICore {
 
     // create ProjectSettings
     const projectSettings = newProjectSettings();
-    projectSettings.appName = convertToValidProjectSettingsAppName(appName); // I just converted it.
+    projectSettings.appName = convertToValidProjectSettingsAppName(appName);
     ctx.projectSettings = projectSettings;
 
     // create folder structure
@@ -1450,7 +1448,7 @@ export class FxCore implements v3.ICore {
     }
 
     // init manifest
-    const manifestInitRes = await appStudioV3.init(context, inputs as v2.InputsWithProjectPath); // WHY?
+    const manifestInitRes = await appStudioV3.init(context, inputs as v2.InputsWithProjectPath);
     if (manifestInitRes.isErr()) return err(manifestInitRes.error);
 
     const manifestAddcapRes = await appStudioV3.addCapabilities(

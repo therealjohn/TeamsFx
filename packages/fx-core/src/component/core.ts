@@ -95,7 +95,7 @@ export class TeamsfxCore {
       },
       execute: async (context: ContextV3, inputs: InputsWithProjectPath) => {
         const projectSettings = newProjectSettings() as ProjectSettingsV3;
-        projectSettings.appName = inputs["app-name"]; // TODO: update?
+        projectSettings.appName = inputs["app-name"];
         projectSettings.components = [];
         context.projectSetting = projectSettings;
         await fs.ensureDir(inputs.projectPath);

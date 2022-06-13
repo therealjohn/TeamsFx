@@ -69,11 +69,11 @@ export class AppStudioPluginV3 {
    * @returns
    */
   async init(ctx: v2.Context, inputs: v2.InputsWithProjectPath): Promise<Result<any, FxError>> {
-    TelemetryUtils.init(ctx); // telemetry sent with converted app name?
+    TelemetryUtils.init(ctx);
     TelemetryUtils.sendStartEvent(TelemetryEventName.init);
     const res = await init(
       inputs.projectPath,
-      ctx.projectSetting.appName, // Why?
+      ctx.projectSetting.appName,
       isExistingTabApp(ctx.projectSetting)
     );
     if (res.isErr()) return err(res.error);
