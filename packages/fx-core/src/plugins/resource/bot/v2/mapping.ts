@@ -58,11 +58,6 @@ const PlatformRuntimeMap: Map<Platform, Runtime> = new Map<Platform, Runtime>([
 
 const invalidInputMsg = "Invalid bot input";
 
-const projectFileMap = new Map<Runtime, (appName: string) => string>([
-  [Runtime.Node, (_: string) => "package.json"],
-  [Runtime.Dotnet, (appName: string) => `${appName}.csproj`],
-]);
-
 export const moduleMap: { [key: string]: string } = {
   [ServiceType.Functions]: BicepModules.Functions,
 };

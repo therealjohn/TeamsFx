@@ -149,7 +149,7 @@ import {
   sendErrorTelemetryThenReturnError,
 } from "./telemetry";
 import { CoreHookContext } from "./types";
-import { isPreviewFeaturesEnabled, ProjectSettingsHelper } from "../common";
+import { isPreviewFeaturesEnabled } from "../common";
 import { runAction } from "../component/workflow";
 import { TemplateProjectsScenarios } from "../plugins/resource/bot/constants";
 import { createContextV3 } from "../component/utils";
