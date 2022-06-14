@@ -564,9 +564,6 @@ export const DefaultReadme = "README.md";
 // @public (undocumented)
 type DeploymentInputs = InputsWithProjectPath & SolutionInputs;
 
-// @public (undocumented)
-export const DevConfigFileName = "config.dev.json";
-
 // @public
 export type DynamicOptions = LocalFunc<StaticOptions>;
 

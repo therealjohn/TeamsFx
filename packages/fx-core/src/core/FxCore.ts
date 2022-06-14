@@ -266,7 +266,6 @@ export class FxCore implements v3.ICore {
       globalVars.isVS = isVSProject(projectSettings);
       ctx.projectSettings = projectSettings;
       const createEnvResult = await this.createEnvWithName(
-        appName,
         environmentManager.getDefaultEnvName(),
         projectSettings,
         inputs
@@ -277,7 +276,6 @@ export class FxCore implements v3.ICore {
 
       if (isConfigUnifyEnabled()) {
         const createLocalEnvResult = await this.createEnvWithName(
-          appName,
           environmentManager.getLocalEnvName(),
           projectSettings,
           inputs
@@ -1280,13 +1278,12 @@ export class FxCore implements v3.ICore {
   }
 
   async createEnvWithName(
-    manifestAppName: string,
     targetEnvName: string,
     projectSettings: ProjectSettings,
     inputs: Inputs,
     existingTabEndpoint?: string
   ): Promise<Result<Void, FxError>> {
-    let appName = manifestAppName;
+    let appName = projectSettings.appName;
     if (targetEnvName === environmentManager.getLocalEnvName()) {
       appName = getLocalAppName(appName);
     }
@@ -1459,7 +1456,6 @@ export class FxCore implements v3.ICore {
     // create env config with existing tab's endpoint
     const endpoint = inputs[CoreQuestionNames.ExistingTabEndpoint] as string;
     const createEnvResult = await this.createEnvWithName(
-      appName,
       environmentManager.getDefaultEnvName(),
       projectSettings,
       inputs,
@@ -1469,7 +1465,6 @@ export class FxCore implements v3.ICore {
       return err(createEnvResult.error);
     }
     const createLocalEnvResult = await this.createEnvWithName(
-      appName,
       environmentManager.getLocalEnvName(),
       projectSettings,
       inputs,

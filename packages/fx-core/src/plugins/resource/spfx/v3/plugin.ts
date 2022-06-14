@@ -192,7 +192,7 @@ export class SPFxPluginImpl {
       replaceMap.set(PlaceHolders.componentNameCamelCase, componentNameCamelCase);
       replaceMap.set(PlaceHolders.componentClassName, componentClassName);
       replaceMap.set(PlaceHolders.componentStrings, componentStrings);
-      replaceMap.set(PlaceHolders.libraryName, libraryName); // TODO: need to verify
+      replaceMap.set(PlaceHolders.libraryName, libraryName);
       replaceMap.set(PlaceHolders.componentId, componentId);
       replaceMap.set(PlaceHolders.componentAlias, componentAlias);
       replaceMap.set(

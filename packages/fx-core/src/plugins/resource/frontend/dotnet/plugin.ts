@@ -52,6 +52,7 @@ import { WebappDeployProgress as DeployProgress } from "./resources/steps";
 import { BotOptionItem, TabOptionItem } from "../../../solution/fx-solution/question";
 import { PluginNames } from "../../../solution/fx-solution/constants";
 import { CoreQuestionNames } from "../../../../core/question";
+import { convertToAlphanumericOnly } from "../../../../common/utils";
 
 type Site = WebSiteManagementModels.Site;
 type TeamsFxResult = Result<any, FxError>;
@@ -113,8 +114,9 @@ export class DotnetPluginImpl implements PluginImpl {
       throw new NoProjectSettingError();
     }
 
-    const projectName = ctx.answers?.[CoreQuestionNames.AppName];
-    const safeProjectName = ctx.answers?.[CoreQuestionNames.SafeProjectName];
+    const projectName = ctx.projectSettings!.appName;
+    const safeProjectName =
+      ctx.answers?.[CoreQuestionNames.SafeProjectName] ?? convertToAlphanumericOnly(projectName);
     await scaffoldFromZipPackage(
       ctx.root,
       new TemplateInfo({ ProjectName: projectName, SafeProjectName: safeProjectName })
