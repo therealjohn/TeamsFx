@@ -58,6 +58,11 @@ const PlatformRuntimeMap: Map<Platform, Runtime> = new Map<Platform, Runtime>([
 
 const invalidInputMsg = "Invalid bot input";
 
+const projectFileMap = new Map<Runtime, (appName: string) => string>([
+  [Runtime.Node, (_: string) => "package.json"],
+  [Runtime.Dotnet, (appName: string) => `${appName}.csproj`],
+]);
+
 export const moduleMap: { [key: string]: string } = {
   [ServiceType.Functions]: BicepModules.Functions,
 };
@@ -98,6 +103,14 @@ export function getTriggerScenarios(trigger: string): string[] {
   const scenarios = triggerScenariosMap.get(trigger);
   if (scenarios) {
     return scenarios;
+  }
+  throw new Error(invalidInputMsg);
+}
+
+export function getProjectFileName(runtime: Runtime, appName: string): string {
+  const projectFileName = projectFileMap.get(runtime);
+  if (projectFileName) {
+    return projectFileName(appName);
   }
   throw new Error(invalidInputMsg);
 }

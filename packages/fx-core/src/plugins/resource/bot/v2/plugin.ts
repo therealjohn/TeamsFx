@@ -41,8 +41,7 @@ import ignore, { Ignore } from "ignore";
 import { DeployConfigsConstants } from "../../../../common/azure-hosting/hostingConstant";
 import { getTemplateInfos, resolveHostType, resolveServiceType } from "./common";
 import { ProgrammingLanguage } from "./enum";
-import { getLanguage, getRuntime, moduleMap } from "./mapping";
-import { CoreQuestionNames } from "../../../../core/question";
+import { getLanguage, getProjectFileName, getRuntime, moduleMap } from "./mapping";
 
 export class TeamsBotV2Impl {
   readonly name: string = PluginBot.PLUGIN_NAME;
@@ -60,9 +59,7 @@ export class TeamsBotV2Impl {
     const projectPath = checkPrecondition(Messages.WorkingDirIsMissing, inputs.projectPath);
     const workingPath = TeamsBotV2Impl.getWorkingPath(projectPath, lang);
     const hostType = resolveHostType(inputs);
-    const projectName = ctx.projectSetting.appName;
-    const projectFilePath = path.join(projectPath, `${projectName}.csproj`);
-    utils.checkAndSavePluginSettingV2(ctx, projectFilePath, PluginBot.HOST_TYPE, hostType);
+    utils.checkAndSavePluginSettingV2(ctx, PluginBot.HOST_TYPE, hostType);
     const templateInfos = getTemplateInfos(ctx, inputs);
 
     await handler?.next(ProgressBarConstants.SCAFFOLD_STEP_FETCH_ZIP);
@@ -153,7 +150,7 @@ export class TeamsBotV2Impl {
     const projectPath = checkPrecondition(Messages.WorkingDirIsMissing, inputs.projectPath);
     const language = getLanguage(ctx.projectSetting.programmingLanguage);
     const workingPath = TeamsBotV2Impl.getWorkingPath(projectPath, language);
-    const projectFilePath = ctx.projectSetting.pluginSettings?.[PluginBot.PROJECT_FILE_PATH];
+    const projectFileName = getProjectFileName(getRuntime(language), ctx.projectSetting.appName);
     const hostType = resolveServiceType(ctx);
     const deployDir = path.join(workingPath, DeployConfigs.DEPLOYMENT_FOLDER);
     const configFile = TeamsBotV2Impl.configFile(workingPath);
@@ -195,7 +192,7 @@ export class TeamsBotV2Impl {
     await progressBarHandler.start(ProgressBarConstants.DEPLOY_STEP_START);
     // build
     await progressBarHandler.next(ProgressBarConstants.DEPLOY_STEP_NPM_INSTALL);
-    const zippedPath = await TeamsBotV2Impl.localBuild(language, workingPath, projectFilePath);
+    const zippedPath = await TeamsBotV2Impl.localBuild(language, workingPath, projectFileName);
 
     // pack
     await progressBarHandler.next(ProgressBarConstants.DEPLOY_STEP_ZIP_FOLDER);
@@ -256,7 +253,7 @@ export class TeamsBotV2Impl {
   private static async localBuild(
     lang: ProgrammingLanguage,
     workingPath: string,
-    projectFilePath: string
+    projectFileName: string
   ): Promise<string> {
     // Return the folder path to be zipped and uploaded
 
@@ -287,7 +284,9 @@ export class TeamsBotV2Impl {
 
     if (lang === ProgrammingLanguage.Csharp) {
       try {
-        const framework = await TeamsBotV2Impl.getFrameworkVersion(projectFilePath);
+        const framework = await TeamsBotV2Impl.getFrameworkVersion(
+          path.join(workingPath, projectFileName)
+        );
         await utils.execute(`dotnet publish --configuration Release`, workingPath);
         return path.join(workingPath, "bin", "Release", framework, "publish");
       } catch (e) {

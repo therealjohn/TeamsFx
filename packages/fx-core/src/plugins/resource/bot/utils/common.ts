@@ -17,7 +17,6 @@ import * as fs from "fs-extra";
 import { forEachFileAndDir } from "./dir-walk";
 import path from "path";
 import { AzureOperationCommonConstants } from "../../../../common/azure-hosting/hostingConstant";
-import { isVSProject } from "../../../../common";
 
 export function toBase64(source: string): string {
   return Base64.encode(source);
@@ -210,7 +209,6 @@ export function checkAndSavePluginSetting(
 
 export function checkAndSavePluginSettingV2(
   context: Context,
-  projectFilePath: string,
   key: string,
   value: ConfigValue
 ): void {
@@ -226,10 +224,6 @@ export function checkAndSavePluginSettingV2(
     context.projectSetting.pluginSettings[PluginBot.PLUGIN_NAME] = {};
   }
   context.projectSetting.pluginSettings[PluginBot.PLUGIN_NAME][key] = value;
-
-  if (isVSProject(context.projectSetting)) {
-    context.projectSetting.pluginSettings[PluginBot.PROJECT_FILE_PATH] = projectFilePath;
-  }
 }
 
 export function existsInEnumValues<T extends string>(
