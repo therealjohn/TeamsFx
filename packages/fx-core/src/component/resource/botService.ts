@@ -46,6 +46,7 @@ import { ComponentNames } from "../constants";
 import { normalizeName } from "../utils";
 import { getComponent } from "../workflow";
 import * as clientFactory from "../../plugins/resource/bot/clientFactory";
+import { convertToAlphanumericOnly } from "../../common/utils";
 @Service("bot-service")
 export class BotService implements CloudResource {
   outputs = {

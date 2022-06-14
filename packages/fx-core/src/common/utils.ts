@@ -16,6 +16,6 @@ export async function getProjectTemplatesFolderPath(projectPath: string): Promis
   return path.resolve(projectPath, "templates");
 }
 
-export function convertToValidProjectSettingsAppName(appName: string): string {
+export function convertToAlphanumericOnly(appName: string): string {
   return appName.replace(/[^\da-zA-Z]/g, "");
 }

@@ -156,7 +156,6 @@ import { createContextV3 } from "../component/utils";
 import "../component/core";
 import { QuestionModelMW_V3 } from "./middleware/questionModelV3";
 import { ProjectVersionCheckerMW } from "./middleware/projectVersionChecker";
-import { convertToValidProjectSettingsAppName } from "../common/utils";
 
 export class FxCore implements v3.ICore {
   tools: Tools;
@@ -245,9 +244,8 @@ export class FxCore implements v3.ICore {
         return err(basicFolderRes.error);
       }
 
-      const projectSettingsAppName = convertToValidProjectSettingsAppName(appName);
       const projectSettings: ProjectSettings = {
-        appName: projectSettingsAppName,
+        appName,
         projectId: inputs.projectId ? inputs.projectId : uuid.v4(),
         version: getProjectSettingsVersion(),
         isFromSample: false,
@@ -1424,7 +1422,7 @@ export class FxCore implements v3.ICore {
 
     // create ProjectSettings
     const projectSettings = newProjectSettings();
-    projectSettings.appName = convertToValidProjectSettingsAppName(appName);
+    projectSettings.appName = appName;
     ctx.projectSettings = projectSettings;
 
     // create folder structure

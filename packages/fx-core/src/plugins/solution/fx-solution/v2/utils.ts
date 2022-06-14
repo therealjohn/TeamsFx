@@ -53,7 +53,6 @@ import { getActivatedV2ResourcePlugins, getAllV2ResourcePlugins } from "../Resou
 import { getPluginContext } from "../utils/util";
 import { PluginsWithContext } from "../types";
 import { getDefaultString, getLocalizedString } from "../../../../common/localizeUtils";
-import { EnvInfoV2 } from "@microsoft/teamsfx-api/build/v2";
 
 export function getSelectedPlugins(projectSettings: ProjectSettings): v2.ResourcePlugin[] {
   return getActivatedV2ResourcePlugins(projectSettings);
@@ -367,13 +366,4 @@ export function getPluginAndContextArray(
   selectedPlugins: Plugin[]
 ): PluginsWithContext[] {
   return selectedPlugins.map((plugin) => [plugin, getPluginContext(ctx, plugin.name)]);
-}
-
-export function getAppNameFromEnvInfo(envInfo: EnvInfoV2): string {
-  let appName = "";
-  if (envInfo.config["manifest"] && envInfo.config["manifest"]["appName"]) {
-    appName = envInfo.config["manifest"]["appName"]["short"];
-  }
-
-  return appName;
 }

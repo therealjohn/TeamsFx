@@ -38,7 +38,6 @@ import { askForDeployConsent } from "../v3/provision";
 import { executeConcurrently, NamedThunk } from "./executor";
 import {
   extractSolutionInputs,
-  getAppNameFromEnvInfo,
   getAzureSolutionSettings,
   getBotTroubleShootMessage,
   getSelectedPlugins,
@@ -211,7 +210,7 @@ export async function deploy(
   const result = await executeConcurrently(thunks, ctx.logProvider);
 
   if (result.kind === "success") {
-    const appName = getAppNameFromEnvInfo(envInfo);
+    const appName = ctx.projectSetting.appName;
     if (inAzureProject) {
       let msg =
         getLocalizedString("core.deploy.successNotice", appName) +

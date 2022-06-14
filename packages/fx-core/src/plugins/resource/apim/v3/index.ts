@@ -39,6 +39,7 @@ import { AssertNotEmpty } from "../error";
 import { Factory } from "../factory";
 import { ProgressBar } from "../utils/progressBar";
 import fs from "fs-extra";
+import { convertToAlphanumericOnly } from "../../../../common/utils";
 @Service(BuiltInFeaturePluginNames.apim)
 export class ApimPluginV3 implements v3.PluginV3 {
   name = BuiltInFeaturePluginNames.apim;
@@ -77,7 +78,7 @@ export class ApimPluginV3 implements v3.PluginV3 {
       ctx.telemetryReporter,
       ctx.logProvider
     );
-    const appName = ctx.projectSetting.appName;
+    const appName = convertToAlphanumericOnly(ctx.projectSetting.appName);
     if (answer.validate) {
       await answer.validate(PluginLifeCycle.Scaffold, apimConfig, inputs.projectPath);
     }
@@ -203,7 +204,10 @@ export class ApimPluginV3 implements v3.PluginV3 {
       ctx.logProvider
     );
 
-    const appName = AssertNotEmpty("projectSettings.appName", ctx.projectSetting.appName);
+    const appName = AssertNotEmpty(
+      "projectSettings.appName",
+      convertToAlphanumericOnly(ctx.projectSetting.appName)
+    );
 
     await this.progressBar.next(
       ProgressStep.Provision,

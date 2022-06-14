@@ -60,7 +60,7 @@ export class TeamsBotV2Impl {
     const projectPath = checkPrecondition(Messages.WorkingDirIsMissing, inputs.projectPath);
     const workingPath = TeamsBotV2Impl.getWorkingPath(projectPath, lang);
     const hostType = resolveHostType(inputs);
-    const projectName = inputs[CoreQuestionNames.AppName];
+    const projectName = ctx.projectSetting.appName;
     const projectFilePath = path.join(projectPath, `${projectName}.csproj`);
     utils.checkAndSavePluginSettingV2(ctx, projectFilePath, PluginBot.HOST_TYPE, hostType);
     const templateInfos = getTemplateInfos(ctx, inputs);

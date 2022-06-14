@@ -133,11 +133,11 @@ export function getAppName(): string | undefined {
     ws,
     `.${ConfigFolderName}`,
     InputConfigsFolderName,
-    DevConfigFileName
+    ProjectSettingsFileName
   );
   try {
     const settingsJson = JSON.parse(fs.readFileSync(settingsJsonPathNew, "utf8"));
-    return settingsJson.manifest.appName.short;
+    return settingsJson.appName;
   } catch (e) {}
   return undefined;
 }

@@ -334,7 +334,7 @@ export class NodeJSBotPluginV3 implements v3.PluginV3 {
         iconUrl: "",
         messagingEndpoint: "",
         callingEndpoint: "",
-      };
+      }; // I think it should allow all chars, but need to verify
       ctx.logProvider.info(Messages.ProvisioningBotRegistration);
       const appStudioTokenRes = await tokenProvider.m365TokenProvider.getAccessToken({
         scopes: AppStudioScopes,
@@ -437,7 +437,7 @@ export class NodeJSBotPluginV3 implements v3.PluginV3 {
         tokenProvider,
         botConfig.botId,
         `${botConfig.siteEndpoint}${CommonStrings.MESSAGE_ENDPOINT_SUFFIX}`
-      );
+      ); // I think it should allow all chars, but need to verify
     }
     return ok(Void);
   }

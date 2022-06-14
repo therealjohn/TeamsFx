@@ -11,12 +11,14 @@ import { getLanguage, getServiceType, getTriggerScenarios } from "./mapping";
 import { ServiceType } from "../../../../common/azure-hosting/interfaces";
 import { PluginBot, HostType, HostTypes } from "../resources/strings";
 import { CoreQuestionNames } from "../../../../core/question";
+import { convertToAlphanumericOnly } from "../../../../common/utils";
 
 export function getTemplateInfos(ctx: Context, inputs: Inputs): CodeTemplateInfo[] {
   const lang = getLanguage(ctx.projectSetting.programmingLanguage);
   const scenarios = Array.from(decideTemplateScenarios(ctx, inputs));
-  const projectName = inputs[CoreQuestionNames.AppName];
-  const safeProjectName = inputs[CoreQuestionNames.SafeProjectName];
+  const projectName = ctx.projectSetting.appName;
+  const safeProjectName =
+    inputs[CoreQuestionNames.SafeProjectName] ?? convertToAlphanumericOnly(projectName);
   return scenarios.map((scenario) => {
     return {
       group: TemplateProjectsConstants.GROUP_NAME_BOT,
