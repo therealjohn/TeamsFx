@@ -17,7 +17,6 @@ import {
   ProjectSettingsFileName,
   StatesFolderName,
   SubscriptionInfo,
-  DevConfigFileName,
 } from "@microsoft/teamsfx-api";
 import {
   environmentManager,

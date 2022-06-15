@@ -239,7 +239,7 @@ export class SimpleAuthPluginImpl {
       Constants.SolutionPlugin.configKeys.location
     ) as string;
 
-    const webAppName = Utils.generateResourceName(ctx.projectSettings!.appName, resourceNameSuffix); // appName will be normalized later, so we don't do any conversion here.
+    const webAppName = Utils.generateResourceName(ctx.projectSettings!.appName, resourceNameSuffix); // appName will be normalized in generateResourceName(), so we don't do any conversion here.
     const appServicePlanName = webAppName;
 
     this.webAppClient = new WebAppClient(

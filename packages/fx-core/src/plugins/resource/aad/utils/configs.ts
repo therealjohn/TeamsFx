@@ -269,7 +269,6 @@ export class ProvisionConfig {
     localSettings: v2.LocalSettings
   ): Promise<Result<any, FxError>> {
     const displayName: string = convertToAlphanumericOnly(ctx.projectSetting.appName);
-    //const displayName: string = ctx.projectSetting.appName;
     if (displayName) {
       this.displayName = displayName.substr(0, Constants.aadAppMaxLength) as string;
     } else {
@@ -299,7 +298,6 @@ export class ProvisionConfig {
     envInfo: v3.EnvInfoV3
   ): Promise<Result<any, FxError>> {
     const displayName: string = convertToAlphanumericOnly(ctx.projectSetting.appName);
-    //const displayName: string = ctx.projectSetting.appName;
     if (displayName) {
       this.displayName = displayName.substr(0, Constants.aadAppMaxLength) as string;
     } else {
@@ -326,7 +324,6 @@ export class ProvisionConfig {
   }
   public async restoreConfigFromContext(ctx: PluginContext): Promise<void> {
     const displayName: string = convertToAlphanumericOnly(ctx.projectSettings!.appName);
-    //const displayName: string = ctx.projectSettings!.appName;
     if (displayName) {
       this.displayName = displayName.substr(0, Constants.aadAppMaxLength) as string;
     } else {

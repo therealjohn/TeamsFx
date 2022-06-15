@@ -261,7 +261,7 @@ export async function createBotAAD(ctx: ProvisionContextV3): Promise<Result<any,
       resourceNameSuffix,
       ctx.projectSetting.appName,
       MaxLengths.AAD_DISPLAY_NAME
-    ); // appName will be normalized later, so skip conversion here.
+    );
     const botAuthCredentials = await AADRegistration.registerAADAppAndGetSecretByGraph(
       graphToken!,
       aadDisplayName,

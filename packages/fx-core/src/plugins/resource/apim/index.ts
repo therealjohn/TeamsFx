@@ -48,7 +48,6 @@ import { ArmTemplateResult } from "../../../common/armInterface";
 import { CliQuestionManager, VscQuestionManager } from "./managers/questionManager";
 import { convertToAlphanumericOnly } from "../../../common/utils";
 
-// TODO: update appName: tab -> apim -> readme
 @Service(ResourcePlugins.ApimPlugin)
 export class ApimPlugin implements Plugin {
   name = "fx-resource-apim";
