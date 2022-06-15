@@ -40,6 +40,7 @@ import { BuiltInFeaturePluginNames } from "../../../solution/fx-solution/v3/cons
 import { ResultFactory } from "../results";
 import { getPermissionRequest } from "../permissions";
 import { GraphScopes, isAadManifestEnabled } from "../../../../common";
+import { convertToAlphanumericOnly } from "../../../../common/utils";
 
 export class Utils {
   public static addLogAndTelemetryWithLocalDebug(
@@ -267,7 +268,8 @@ export class ProvisionConfig {
     inputs: v2.InputsWithProjectPath,
     localSettings: v2.LocalSettings
   ): Promise<Result<any, FxError>> {
-    const displayName: string = ctx.projectSetting.appName;
+    const displayName: string = convertToAlphanumericOnly(ctx.projectSetting.appName);
+    //const displayName: string = ctx.projectSetting.appName;
     if (displayName) {
       this.displayName = displayName.substr(0, Constants.aadAppMaxLength) as string;
     } else {
@@ -296,7 +298,8 @@ export class ProvisionConfig {
     inputs: v2.InputsWithProjectPath,
     envInfo: v3.EnvInfoV3
   ): Promise<Result<any, FxError>> {
-    const displayName: string = ctx.projectSetting.appName;
+    const displayName: string = convertToAlphanumericOnly(ctx.projectSetting.appName);
+    //const displayName: string = ctx.projectSetting.appName;
     if (displayName) {
       this.displayName = displayName.substr(0, Constants.aadAppMaxLength) as string;
     } else {
@@ -322,7 +325,8 @@ export class ProvisionConfig {
     return ok(undefined);
   }
   public async restoreConfigFromContext(ctx: PluginContext): Promise<void> {
-    const displayName: string = ctx.projectSettings!.appName;
+    const displayName: string = convertToAlphanumericOnly(ctx.projectSettings!.appName);
+    //const displayName: string = ctx.projectSettings!.appName;
     if (displayName) {
       this.displayName = displayName.substr(0, Constants.aadAppMaxLength) as string;
     } else {
