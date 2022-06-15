@@ -78,7 +78,6 @@ export class PluginBot {
   // Bot capabilities, for example: notification, command-and-response.
   // Don't mix up with Teams capabilities (tab, bot, etc.)
   public static readonly BOT_CAPABILITIES = "capabilities";
-  public static readonly PROJECT_FILE_PATH = "projectFilePath";
 }
 
 export class ConfigNames {

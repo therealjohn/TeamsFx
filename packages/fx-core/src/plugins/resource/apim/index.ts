@@ -45,7 +45,6 @@ import { ResourcePlugins } from "../../solution/fx-solution/ResourcePluginContai
 import "./v2";
 import "./v3";
 import { ArmTemplateResult } from "../../../common/armInterface";
-import { CliQuestionManager, VscQuestionManager } from "./managers/questionManager";
 import { convertToAlphanumericOnly } from "../../../common/utils";
 
 @Service(ResourcePlugins.ApimPlugin)
@@ -208,7 +207,6 @@ async function _provision(ctx: PluginContext, progressBar: ProgressBar): Promise
   );
 
   const appName = AssertNotEmpty("projectSettings.appName", ctx?.projectSettings?.appName);
-  //const convertedAppName = convertToAlphanumericOnly(appName);
   await progressBar.next(
     ProgressStep.Provision,
     ProgressMessages[ProgressStep.Provision].CreateApim

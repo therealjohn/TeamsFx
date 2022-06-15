@@ -206,7 +206,6 @@ export class ApimPluginV3 implements v3.PluginV3 {
     );
 
     const appName = AssertNotEmpty("projectSettings.appName", ctx.projectSetting.appName);
-    const convertedAppName = convertToAlphanumericOnly(appName);
     await this.progressBar.next(
       ProgressStep.Provision,
       ProgressMessages[ProgressStep.Provision].CreateApim
