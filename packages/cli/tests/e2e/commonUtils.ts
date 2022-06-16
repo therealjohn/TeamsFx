@@ -87,11 +87,11 @@ export function getTestFolder() {
 }
 
 export function getAppNamePrefix() {
-  return "fx";
+  return "Teamsfx";
 }
 
 export function getUniqueAppName() {
-  return getAppNamePrefix() + "." + Date.now().toString() + "." + uuidv4().slice(0, 2);
+  return getAppNamePrefix() + ".t" + Date.now().toString() + ".e" + uuidv4().slice(0, 2);
 }
 
 export function convertToAlphanumericOnly(appName: string): string {
