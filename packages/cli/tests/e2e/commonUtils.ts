@@ -87,11 +87,11 @@ export function getTestFolder() {
 }
 
 export function getAppNamePrefix() {
-  return "fxE2E";
+  return "fx";
 }
 
 export function getUniqueAppName() {
-  return getAppNamePrefix() + Date.now().toString() + uuidv4().slice(0, 2);
+  return getAppNamePrefix() + "." + Date.now().toString() + "." + uuidv4().slice(0, 2);
 }
 
 export function getSubscriptionId() {
