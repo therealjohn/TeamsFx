@@ -16,6 +16,24 @@ namespace Microsoft.Extensions.DependencyInjection;
 public static class TeamsFxConfigurationMethods
 {
     /// <summary>
+    /// Add TeamsFx bot related SDK.
+    /// </summary>
+    /// <param name="services">service collection for DI</param>
+    /// <param name="namedConfigurationSection">configuration instance</param>
+    /// <returns></returns>
+    public static IServiceCollection AddTeamsFxBot(
+        this IServiceCollection services,
+        IConfiguration namedConfigurationSection)
+    {
+        services.AddHttpClient();
+        services.AddOptions();
+        services.AddScoped<TeamsFx.TeamsFx>();
+
+        services.AddOptions<AuthenticationOptions>().Bind(namedConfigurationSection.GetSection(AuthenticationOptions.Authentication)).ValidateDataAnnotations();
+        return services;
+    }
+
+    /// <summary>
     /// Add TeamsFx SDK.
     /// </summary>
     /// <param name="services">service collection for DI</param>
@@ -31,7 +49,6 @@ public static class TeamsFxConfigurationMethods
         services.AddScoped<TeamsUserCredential>();
 
         services.AddOptions<AuthenticationOptions>().Bind(namedConfigurationSection.GetSection(AuthenticationOptions.Authentication)).ValidateDataAnnotations();
-
         services.AddSingleton<IIdentityClientAdapter>(sp => {
             var authenticationOptions = sp.GetRequiredService<IOptions<AuthenticationOptions>>().Value;
             var builder = ConfidentialClientApplicationBuilder.Create(authenticationOptions.ClientId)

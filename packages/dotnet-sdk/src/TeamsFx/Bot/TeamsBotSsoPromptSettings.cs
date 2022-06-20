@@ -2,16 +2,32 @@
 // Licensed under the MIT License.
 
 namespace Microsoft.TeamsFx;
+using System.ComponentModel.DataAnnotations;
 
 /// <summary>
 /// Contains settings for an <see cref="TeamsBotSsoPrompt"/>.
 /// </summary>
 public class TeamsBotSsoPromptSettings
 {
+
+    /// <summary>
+    /// Constructor of TeamsBotSsoPromptSettings
+    /// </summary>
+    public TeamsBotSsoPromptSettings(string[] scopes, string clientId, string tenantId, string applicationIdUri, int timeout = 900000, bool endOnInvalidMessage = true)
+    {
+        Scopes = scopes;
+        Timeout = timeout;
+        EndOnInvalidMessage = endOnInvalidMessage;
+        ClientId = clientId;
+        TenantId = tenantId;
+        ApplicationIdUri = applicationIdUri;
+    }
+
     /// <summary>
     /// Gets or sets the array of strings that declare the desired permissions and the resources requested.
     /// </summary>
     /// <value>The array of strings that declare the desired permissions and the resources requested.</value>
+    [Required(ErrorMessage = "Scope is required")]
     public string[] Scopes { get; set; }
 
     /// <summary>
@@ -32,4 +48,23 @@ public class TeamsBotSsoPromptSettings
     /// an invalid message.</value>
     public bool EndOnInvalidMessage { get; set; } = true;
 
+    /// <summary>
+    /// The client (application) ID of an App Registration in the tenant.
+    /// </summary>
+    [Required(ErrorMessage = "Client id is required")]
+    [RegularExpression(@"^[0-9A-Fa-f\-]{36}$")]
+    public string ClientId { get; set; }
+
+    /// <summary>
+    /// AAD tenant id.
+    /// </summary>
+    [Required(ErrorMessage = "Tenant id is required")]
+    [RegularExpression(@"^[0-9A-Fa-f\-]{36}$")]
+    public string TenantId { get; set; }
+
+    /// <summary>
+    /// Application ID URI.
+    /// </summary>
+    [Required(ErrorMessage = "Application id uri is required")]
+    public string ApplicationIdUri { get; set; }
 }
