@@ -679,7 +679,7 @@ export class FxCore implements v3.ICore {
     await appStudioV3.publishManifestZipPackage(
       teamsAppId,
       zipPath,
-      TOOLS.tokenProvider.appStudioToken
+      TOOLS.tokenProvider.m365TokenProvider
     );
     return ok(Void);
   }

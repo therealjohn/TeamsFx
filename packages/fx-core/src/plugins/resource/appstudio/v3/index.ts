@@ -294,10 +294,12 @@ export class AppStudioPluginV3 {
   async publishManifestZipPackage(
     teamsAppId: string,
     zipPackagePath: string,
-    tokenProvider: AppStudioTokenProvider
+    tokenProvider: M365TokenProvider
   ): Promise<Result<Void, FxError>> {
-    const token = await tokenProvider.getAccessToken();
-    if (!token) {
+    const maybeToken = await tokenProvider.getAccessToken({
+      scopes: AppStudioScopes,
+    });
+    if (maybeToken.isErr() || maybeToken.value == undefined) {
       return err(
         AppStudioResultFactory.SystemError("InvalidAccessToken", [
           "invalid access token",
@@ -305,6 +307,7 @@ export class AppStudioPluginV3 {
         ])
       );
     }
+    const token = maybeToken.value;
     const buf = await fs.readFile(zipPackagePath);
     const appDef = await AppStudioClient.getAppByTeamsAppId(teamsAppId, token);
     console.log(`Publishing manifest zip package for app ${teamsAppId}`);
