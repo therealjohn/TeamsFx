@@ -11,7 +11,6 @@ import fs from "fs-extra";
 import path from "path";
 import { environmentManager } from "@microsoft/teamsfx-core";
 import { getSubscriptionId, getTestFolder, getUniqueAppName, cleanUp } from "../commonUtils";
-import AppStudioLogin from "../../../src/commonlib/appStudioLogin";
 import { CliHelper } from "../../commonlib/cliHelper";
 import { Capability } from "../../commonlib/constants";
 import mockedEnv, { RestoreFn } from "mocked-env";
@@ -39,7 +38,7 @@ describe(".NET projects", function () {
       });
       it(`should create a .NET project`, async () => {
         await CliHelper.createDotNetProject(appName, testFolder, Capability.Tab);
-        const programCsPath = path.join(testFolder, appName, "Program.cs");
+        const programCsPath = path.join(testFolder, appName, "App.razor");
         chai.assert.isTrue(await fs.pathExists(programCsPath));
       });
     }

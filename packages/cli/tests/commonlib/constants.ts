@@ -33,6 +33,7 @@ export const fileEncoding = "UTF8";
 
 export enum Capability {
   Tab = "tab",
+  SSOTab = "sso-tab",
   Bot = "bot",
   MessageExtension = "message-extension",
   M365SsoLaunchPage = "sso-launch-page",
@@ -41,6 +42,7 @@ export enum Capability {
   TabSso = "TabSSO",
   BotSso = "BotSSO",
   TabNonSso = "tab-non-sso",
+  Notification = "notification",
 }
 
 export enum Resource {
@@ -58,6 +60,12 @@ export enum ResourceToDeploy {
   Apim = "apim",
   AadManifest = "aad-manifest",
 }
+
+export enum Runtime {
+  Dotnet = "dotnet",
+  Node = "node",
+}
+
 export class StateConfigKey {
   // solution
   static readonly subscriptionId = "subscriptionId";
@@ -86,6 +94,7 @@ export class StateConfigKey {
   static readonly botId = "botId";
   static readonly botPassword = "botPassword";
   static readonly botWebAppResourceId = "botWebAppResourceId";
+  static readonly botResourceId = "resourceId";
   // sql
   static readonly skipAddingUser = "skipAddingUser";
   static readonly sqlEndpoint: string = "sqlEndpoint";

@@ -4,15 +4,9 @@ import { PluginContext } from "@microsoft/teamsfx-api";
 import { LanguageStrategy } from "../languageStrategy";
 import { Messages } from "../resources/messages";
 import { FxResult, FxBotPluginResultFactory as ResultFactory } from "../result";
-import {
-  BotBicep,
-  FolderNames,
-  PathInfo,
-  ProgressBarConstants,
-  TemplateProjectsConstants,
-} from "../constants";
+import { BotBicep, PathInfo, ProgressBarConstants, TemplateProjectsConstants } from "../constants";
 
-import { HostTypes, PluginBot } from "../resources/strings";
+import { PluginBot } from "../resources/strings";
 import { PreconditionError, SomethingMissingError } from "../errors";
 import { ProgressBarFactory } from "../progressBars";
 import { Logger } from "../logger";
@@ -28,21 +22,25 @@ import {
   getResourceGroupNameFromResourceId,
   getSiteNameFromResourceId,
   getSubscriptionIdFromResourceId,
-} from "../../../../common/tools";
+} from "../../../../common";
 import { ArmTemplateResult } from "../../../../common/armInterface";
 import { FuncHostedDeployMgr } from "./deployMgr";
 import * as appService from "@azure/arm-appservice";
 import { getZipDeployEndpoint } from "../utils/zipDeploy";
-import { AzureOperations } from "../azureOps";
 import * as utils from "../utils/common";
-import { CommonConstants, FuncHostedBotDeployConfigs } from "./constants";
+import { AzureOperations } from "../../../../common/azure-hosting/azureOps";
+import {
+  AzureOperationCommonConstants,
+  DeployConfigsConstants,
+} from "../../../../common/azure-hosting/hostingConstant";
+import { HostType } from "../v2/enum";
 
 export class FunctionsHostedBotImpl extends TeamsBotImpl {
   public async scaffold(context: PluginContext): Promise<FxResult> {
     this.ctx = context;
 
     await this.config.restoreConfigFromContext(context, true);
-    this.config.scaffold.hostType = HostTypes.AZURE_FUNCTIONS;
+    this.config.scaffold.hostType = HostType.Functions;
 
     Logger.info(Messages.ScaffoldingBot);
 
@@ -174,7 +172,7 @@ export class FunctionsHostedBotImpl extends TeamsBotImpl {
 
     await handler?.next(ProgressBarConstants.DEPLOY_STEP_ZIP_FOLDER);
     const deployTime: Date = new Date();
-    const rules = await deployMgr.getIgnoreRules(FuncHostedBotDeployConfigs.FUNC_IGNORE_FILE);
+    const rules = await deployMgr.getIgnoreRules(DeployConfigsConstants.FUNC_IGNORE_FILE);
     const zipBuffer = await deployMgr.zipAFolder(rules);
 
     // 2.2 Retrieve publishing credentials.
@@ -182,7 +180,7 @@ export class FunctionsHostedBotImpl extends TeamsBotImpl {
       await this.getAzureAccountCredential(),
       this.config.provision.subscriptionId!
     );
-    const listResponse = await AzureOperations.ListPublishingCredentials(
+    const listResponse = await AzureOperations.listPublishingCredentials(
       webSiteMgmtClient,
       this.config.provision.resourceGroup!,
       this.config.provision.siteName!
@@ -200,15 +198,15 @@ export class FunctionsHostedBotImpl extends TeamsBotImpl {
       },
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
-      timeout: CommonConstants.deployTimeoutInMs,
+      timeout: AzureOperationCommonConstants.deployTimeoutInMs,
     };
 
     const zipDeployEndpoint: string = getZipDeployEndpoint(this.config.provision.siteName!);
     await handler?.next(ProgressBarConstants.DEPLOY_STEP_ZIP_DEPLOY);
-    const statusUrl = await AzureOperations.ZipDeployPackage(zipDeployEndpoint, zipBuffer, config);
-    await AzureOperations.CheckDeployStatus(statusUrl, config);
+    const statusUrl = await AzureOperations.zipDeployPackage(zipDeployEndpoint, zipBuffer, config);
+    await AzureOperations.checkDeployStatus(statusUrl, config);
 
-    await AzureOperations.RestartWebApp(
+    await AzureOperations.restartWebApp(
       webSiteMgmtClient,
       this.config.provision.resourceGroup,
       this.config.provision.siteName

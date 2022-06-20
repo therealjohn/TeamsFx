@@ -2,15 +2,8 @@
 // Licensed under the MIT license.
 import * as utils from "./utils/common";
 import { ProgrammingLanguage } from "./enums/programmingLanguage";
-import {
-  DownloadConstants,
-  SourceCodeDir,
-  TemplateProjectsConstants,
-  TemplateProjectsScenarios,
-  TriggerTemplateScenarioMappings,
-} from "./constants";
-import { Commands, HostTypes } from "./resources/strings";
-
+import { TemplateProjectsScenarios, TriggerTemplateScenarioMappings } from "./constants";
+import { Commands } from "./resources/strings";
 import * as appService from "@azure/arm-appservice";
 import { NameValuePair } from "@azure/arm-appservice/esm/models";
 import { CommandExecutionError, TemplateZipFallbackError, UnzipError } from "./errors";
@@ -26,6 +19,7 @@ import {
 import { TeamsBotConfig } from "./configs/teamsBotConfig";
 import { PluginActRoles } from "./enums/pluginActRoles";
 import * as path from "path";
+import { HostType } from "./v2/enum";
 
 export class LanguageStrategy {
   public static async scaffoldProject(
@@ -140,7 +134,11 @@ export class LanguageStrategy {
         await utils.execute("npm install", packDir);
         await utils.execute("npm run build", packDir);
       } catch (e) {
-        throw new CommandExecutionError(`${Commands.NPM_INSTALL},${Commands.NPM_BUILD}`, e);
+        throw new CommandExecutionError(
+          `${Commands.NPM_INSTALL}, ${Commands.NPM_BUILD}`,
+          packDir,
+          e
+        );
       }
     }
 
@@ -149,7 +147,7 @@ export class LanguageStrategy {
         // fail to npm install @microsoft/teamsfx on azure web app, so pack it locally.
         await utils.execute("npm install", packDir);
       } catch (e) {
-        throw new CommandExecutionError(`${Commands.NPM_INSTALL}`, e);
+        throw new CommandExecutionError(`${Commands.NPM_INSTALL}`, packDir, e);
       }
     }
   }
@@ -158,7 +156,7 @@ export class LanguageStrategy {
     config: TeamsBotConfig
   ): TemplateProjectsScenarios {
     if (config.actRoles.includes(PluginActRoles.Notification)) {
-      if (config.scaffold.hostType === HostTypes.APP_SERVICE) {
+      if (config.scaffold.hostType === HostType.AppService) {
         return TemplateProjectsScenarios.NOTIFICATION_RESTIFY_SCENARIO_NAME;
       } else {
         return TemplateProjectsScenarios.NOTIFICATION_FUNCTION_BASE_SCENARIO_NAME;

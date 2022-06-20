@@ -1,4 +1,7 @@
-﻿namespace Microsoft.TeamsFx.Conversation
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace Microsoft.TeamsFx.Conversation
 {
     /// <summary>
     /// Options to initialize <see cref="NotificationBot"/>.
@@ -19,10 +22,13 @@
         /// </para>
         /// <list type="bullet">
         ///     <item>
-        ///         <description>"{<see cref="Environment.CurrentDirectory"/>}/.notification.localstore.json" if running locally.</description>
+        ///         <description>"{$env:TEAMSFX_NOTIFICATION_LOCALSTORE_DIR}/.notification.localstore.json" if running locally.</description>
         ///     </item>
         ///     <item>
         ///         <description>"{$env:TEMP}/.notification.localstore.json" if {$env:RUNNING_ON_AZURE} is set to "1".</description>
+        ///     </item>
+        ///     <item>
+        ///         <description>"{<see cref="Environment.CurrentDirectory"/>}/.notification.localstore.json" if all above environment variables are not set.</description>
         ///     </item>
         /// </list>
         /// <para>

@@ -17,8 +17,10 @@ import fs from "fs-extra";
 import * as path from "path";
 import "reflect-metadata";
 import { Service } from "typedi";
+import { createCapabilityForDotNet } from "../core/question";
 import { getTemplatesFolder } from "../folder";
-import { doDeployArmTemplatesV3 } from "../plugins/solution/fx-solution/arm";
+import arm from "../plugins/solution/fx-solution/arm";
+import { createFileEffect, createFilesEffects } from "./utils";
 @Service("bicep")
 export class BicepProvider {
   readonly name = "bicep";
@@ -31,16 +33,16 @@ export class BicepProvider {
       type: "function",
       plan: async (context: ContextV3, inputs: InputsWithProjectPath) => {
         const targetFolder = path.join(inputs.projectPath, "templates", "azure");
-        const effect: FileEffect = {
-          type: "file",
-          operate: "create",
-          filePath: [
-            path.join(targetFolder, "main.bicep"),
-            path.join(targetFolder, "provision.bicep"),
-            path.join(targetFolder, "config.bicep"),
-          ],
-        };
-        return ok([effect]);
+        return ok(
+          createFilesEffects(
+            [
+              path.join(targetFolder, "main.bicep"),
+              path.join(targetFolder, "provision.bicep"),
+              path.join(targetFolder, "config.bicep"),
+            ],
+            "skip"
+          )
+        );
       },
       execute: async (
         context: ContextV3,
@@ -108,21 +110,13 @@ export class BicepProvider {
       },
       execute: async (context: ContextV3, inputs: InputsWithProjectPath) => {
         const ctx = context as ProvisionContextV3;
-        const res = await doDeployArmTemplatesV3(
+        const res = await arm.deployArmTemplates(
           ctx,
           inputs,
           ctx.envInfo,
           ctx.tokenProvider.azureAccountProvider
         );
         if (res.isErr()) return err(res.error);
-        // ctx.envInfo.state["azure-web-app"] = ctx.envInfo.state["azure-web-app"] || {};
-        // ctx.envInfo.state["azure-sql"] = ctx.envInfo.state["azure-sql"] || {};
-        // ctx.envInfo.state["azure-web-app"].endpoint = "MockAzureWebAppEndpoint";
-        // ctx.envInfo.state["azure-web-app"].resourceId = "MockAzureWebAppResourceId";
-        // ctx.envInfo.state["azure-web-app"].domain = "MockAzureWebAppDomain";
-        // ctx.envInfo.state["azure-sql"].sqlResourceId = "MockSqlResourceId";
-        // ctx.envInfo.state["azure-sql"].sqlEndpoint = "MockSqlEndpoint";
-        // ctx.envInfo.state["azure-sql"].sqlDatabaseName = "MockSqlDatabaseName";
         return ok([
           {
             type: "service",

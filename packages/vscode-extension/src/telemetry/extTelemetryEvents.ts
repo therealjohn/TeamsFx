@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 export enum TelemetryEvent {
+  ManageAccount = "manage-account",
   CreateAccountStart = "create-account-start",
   CreateAccount = "create-account",
 
-  QuickStart = "quick-start",
+  GetStarted = "quick-start",
 
   Samples = "samples",
 
@@ -28,12 +29,6 @@ export enum TelemetryEvent {
   RunIconDebugStart = "run-icon-debug-start",
   RunIconDebug = "run-icon-debug",
 
-  AddResourceStart = "add-resource-start",
-  AddResource = "add-resource",
-
-  AddCapStart = "add-capability-start",
-  AddCap = "add-capability",
-
   AddFeatureStart = "add-feature-start",
   AddFeature = "add-feature",
 
@@ -45,9 +40,6 @@ export enum TelemetryEvent {
 
   UpdatePreviewManifestStart = "update-preview-manifest-start",
   UpdatePreviewManifest = "update-preview-manifest",
-
-  ConnectExistingApiStart = "connect-existing-api-start",
-  ConnectExistingApi = "connect-existing-api",
 
   EditManifestTemplate = "edit-manifest-template",
   EditAadManifestTemplate = "edit-aad-manifest-template",
@@ -75,9 +67,6 @@ export enum TelemetryEvent {
   PublishStart = "publish-start",
   Publish = "publish",
 
-  AddCICDWorkflowsStart = "add-cicd-workflows-start",
-  AddCICDWorkflows = "add-cicd-workflows",
-
   ManageTeamsApp = "manage-teams-app",
 
   ManageTeamsBot = "manage-teams-bot",
@@ -100,8 +89,6 @@ export enum TelemetryEvent {
 
   NextStep = "next-step",
 
-  ClickQuickStartCard = "click-quick-start-card",
-
   ClickOpenDeploymentTreeview = "click-open-deployment-tree-view",
   ClickValidatePrerequisites = "click-validate-prerequisites",
   ClickOpenReadMe = "click-open-read-me",
@@ -123,6 +110,18 @@ export enum TelemetryEvent {
   DebugNpmInstall = "debug-npm-install",
   DebugServiceStart = "debug-service-start",
   DebugService = "debug-service",
+  DebugPrereqsCheckM365Account = "debug-prereqs-check-m365-account",
+  DebugPrereqsCheckNode = "debug-prereqs-check-node",
+  DebugPrereqsCheckPorts = "debug-prereqs-check-ports",
+  DebugPrereqsCheckCert = "debug-prereqs-check-cert",
+  DebugPrereqsCheckDependencies = "debug-prereqs-check-dependencies",
+  DebugPrereqsEnsureDependencies = "debug-prereqs-ensure-dependencies",
+  DebugPrereqsInstallPackages = "debug-prereqs-install-packages",
+  DebugPreCheckCoreLocalDebug = "debug-precheck-core-local-debug",
+  DebugTaskProvider = "debug-task-provider",
+  DebugProviderResolveDebugConfiguration = "debug-provider-resolve-debug-configuration",
+  DebugAllStart = "debug-all-start",
+  DebugAll = "debug-all",
 
   AutomaticNpmInstallStart = "automatic-npm-install-start",
   AutomaticNpmInstall = "automatic-npm-install",
@@ -184,13 +183,13 @@ export enum TelemetryEvent {
   TreeViewPreview = "treeview-preview",
 
   ShowOutputChannel = "show-output-channel",
-
-  AddSsoStart = "add-sso-start",
-  AddSso = "add-sso",
+  OpenFolder = "open-folder",
 
   // To track the effect of UX changes
   // that prevents user performing concurrent operations.
   TreeViewCommandConcurrentExecution = "treeview-command-concurrent-execution",
+
+  Deactivate = "deactivate",
 }
 
 export enum TelemetryProperty {
@@ -206,6 +205,7 @@ export enum TelemetryProperty {
   ErrorType = "error-type",
   ErrorCode = "error-code",
   ErrorMessage = "error-message",
+  Errors = "errors",
   DebugSessionId = "session-id",
   DebugType = "type",
   DebugRequest = "request",
@@ -213,6 +213,7 @@ export enum TelemetryProperty {
   DebugRemote = "remote",
   DebugAppId = "debug-appid",
   DebugProjectComponents = "debug-project-components",
+  DebugCheckResults = "debug-check-results",
   DebugNpmInstallName = "debug-npm-install-name",
   DebugNpmInstallExitCode = "debug-npm-install-exit-code",
   DebugNpmInstallErrorMessage = "debug-npm-install-error-message",
@@ -220,6 +221,8 @@ export enum TelemetryProperty {
   DebugNpmInstallNpmVersion = "debug-npm-install-npm-version",
   DebugServiceName = "debug-service-name",
   DebugServiceExitCode = "debug-service-exit-code",
+  DebugPrereqsDepsType = "debug-prereqs-deps-type",
+  DebugFailedServices = "debug-failed-services",
   Internal = "internal",
   InternalAlias = "internal-alias",
   OSArch = "os-arch",
@@ -237,6 +240,7 @@ export enum TelemetryProperty {
   IsFromSample = "is-from-sample",
   IsSpfx = "is-spfx",
   IsM365 = "is-m365",
+  IsCreatingM365 = "is-creating-m365",
   SettingsVersion = "settings-version",
   UpdateFailedFiles = "update-failed-files",
   NewProjectId = "new-project-id",
@@ -246,6 +250,8 @@ export enum TelemetryProperty {
   // Used with OpenTutorial
   TutorialName = "tutorial-name",
   DocumentationName = "documentation-name",
+  // Used with Deactivate
+  Timestamp = "timestamp",
 }
 
 export enum TelemetrySuccess {

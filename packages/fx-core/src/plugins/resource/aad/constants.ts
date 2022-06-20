@@ -11,7 +11,6 @@ export class Constants {
   static aadAppPasswordDisplayName = "default";
 
   static INCLUDE_AAD_MANIFEST = "include-aad-manifest";
-  static DEPLOY_AAD_FROM_CODELENS = "deploy-aad-from-codelens";
 
   static localDebugPrefix = "local_";
 

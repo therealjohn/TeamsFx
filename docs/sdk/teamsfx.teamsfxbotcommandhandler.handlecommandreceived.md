@@ -4,9 +4,6 @@
 
 ## TeamsFxBotCommandHandler.handleCommandReceived() method
 
-> This API is provided as a preview for developers and may change based on feedback that we receive. Do not use this API in a production environment.
-> 
-
 Handles a bot command received activity.
 
 <b>Signature:</b>
@@ -26,5 +23,5 @@ handleCommandReceived(context: TurnContext, message: CommandMessage): Promise<st
 
 Promise&lt;string \| Partial&lt;Activity&gt; \| void&gt;
 
-A `Promise` representing an activity or text to send as the command response. Or no return value if developers want to send the response activity by themself in this method.
+A `Promise` representing an activity or text to send as the command response. Or no return value if developers want to send the response activity by themselves in this method.
 

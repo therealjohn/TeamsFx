@@ -2,20 +2,39 @@
 // Licensed under the MIT license.
 
 import { AzureHosting } from "./azureHosting";
-import { HostType } from "./interfaces";
+import { BicepContext, ServiceType } from "./interfaces";
+import { ResourceTemplate, TokenProvider, Void } from "@microsoft/teamsfx-api";
+import { azureWebSiteDeploy } from "./utils";
+import { AzureOperations } from "./azureOps";
+import { getResourceGroupNameFromResourceId, getSiteNameFromResourceId } from "../tools";
 
-const functionResourceId = "provisionOutputs.functionOutput.value.resourceId";
-const functionHostName = "provisionOutputs.functionOutput.value.validDomain";
-const functionEndpoint = "provisionOutputs.functionOutputs.value.functionEndpoint";
-const endpointAsParam = "functionProvision.outputs.functionEndpoint";
+const endpointAsParam = (moduleName: string): string =>
+  `${moduleName}Provision.outputs.functionEndpoint`;
 
 export class AzureFunctionHosting extends AzureHosting {
   configurable = true;
-  hostType = HostType.Function;
+  hostType = ServiceType.Functions;
   reference = {
-    resourceId: functionResourceId,
-    hostName: functionHostName,
-    functionEndpoint: functionEndpoint,
-    endpointAsParam: endpointAsParam,
+    endpointAsParam: endpointAsParam("function"),
   };
+
+  async generateBicep(bicepContext: BicepContext): Promise<ResourceTemplate> {
+    this.reference.endpointAsParam = endpointAsParam(
+      bicepContext.moduleNames[ServiceType.Functions]
+    );
+    return super.generateBicep(bicepContext);
+  }
+
+  async deploy(resourceId: string, tokenProvider: TokenProvider, buffer: Buffer): Promise<Void> {
+    await super.deploy(resourceId, tokenProvider, buffer);
+    const client = await azureWebSiteDeploy(resourceId, tokenProvider, buffer, this.logger);
+
+    await AzureOperations.restartWebApp(
+      client,
+      getResourceGroupNameFromResourceId(resourceId),
+      getSiteNameFromResourceId(resourceId),
+      this.logger
+    );
+    return Void;
+  }
 }

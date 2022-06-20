@@ -20,6 +20,9 @@ import {
   UserError,
   TelemetryReporter,
   Void,
+  Inputs,
+  Platform,
+  M365TokenProvider,
 } from "@microsoft/teamsfx-api";
 import axios from "axios";
 import { exec, ExecOptions } from "child_process";
@@ -65,6 +68,11 @@ import { isFeatureFlagEnabled } from "./featureFlags";
 import _ from "lodash";
 import { BotHostTypeName, BotHostTypes } from "./local/constants";
 import { isExistingTabApp } from "./projectSettingsHelper";
+import { ExistingTemplatesStat } from "../plugins/resource/cicd/utils/existingTemplatesStat";
+import { environmentManager } from "../core/environment";
+import { NoProjectOpenedError } from "../plugins/resource/cicd/errors";
+import { getProjectTemplatesFolderPath } from "./utils";
+import * as path from "path";
 
 Handlebars.registerHelper("contains", (value, array) => {
   array = array instanceof Array ? array : [array];
@@ -415,7 +423,7 @@ export function isApiConnectEnabled(): boolean {
 // This method is for deciding whether AAD should be activated.
 // Currently AAD plugin will always be activated when scaffold.
 // This part will be updated when we support adding aad separately.
-export function isAADEnabled(solutionSettings: AzureSolutionSettings): boolean {
+export function isAADEnabled(solutionSettings: AzureSolutionSettings | undefined): boolean {
   if (!solutionSettings) {
     return false;
   }
@@ -561,6 +569,45 @@ export function canAddApiConnection(solutionSettings?: AzureSolutionSettings): b
   );
 }
 
+// Conditions required to be met:
+// 1. Not (All templates were existing env x provider x templates)
+// 2. Not minimal app
+export async function canAddCICDWorkflows(inputs: Inputs, ctx: v2.Context): Promise<boolean> {
+  // Not include `Add CICD Workflows` in minimal app case.
+  if (isExistingTabApp(ctx.projectSetting)) {
+    return false;
+  }
+
+  if (!inputs.projectPath) {
+    throw new NoProjectOpenedError();
+  }
+
+  const envProfilesResult = await environmentManager.listRemoteEnvConfigs(inputs.projectPath);
+  if (envProfilesResult.isErr()) {
+    throw new SystemError(
+      "Core",
+      "ListMultiEnvError",
+      getDefaultString("error.cicd.FailedToListMultiEnv", envProfilesResult.error.message),
+      getLocalizedString("error.cicd.FailedToListMultiEnv", envProfilesResult.error.message)
+    );
+  }
+
+  const existingInstance = ExistingTemplatesStat.getInstance(
+    inputs.projectPath,
+    envProfilesResult.value
+  );
+  await existingInstance.scan();
+
+  // If at least one env are not all-existing, return true.
+  for (const envName of envProfilesResult.value) {
+    if (existingInstance.notExisting(envName)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export function isYoCheckerEnabled(): boolean {
   return isFeatureFlagEnabled(FeatureFlagName.YoCheckerEnable, true);
 }
@@ -594,13 +641,15 @@ export function compileHandlebarsTemplateString(templateString: string, context:
 
 export async function getAppDirectory(projectRoot: string): Promise<string> {
   const REMOTE_MANIFEST = "manifest.source.json";
-  const appDirNewLocForMultiEnv = `${projectRoot}/templates/${AppPackageFolderName}`;
-  const appDirNewLoc = `${projectRoot}/${AppPackageFolderName}`;
-  const appDirOldLoc = `${projectRoot}/.${ConfigFolderName}`;
-
-  if (await fs.pathExists(`${appDirNewLocForMultiEnv}`)) {
+  const appDirNewLocForMultiEnv = path.resolve(
+    await getProjectTemplatesFolderPath(projectRoot),
+    AppPackageFolderName
+  );
+  const appDirNewLoc = path.join(projectRoot, AppPackageFolderName);
+  const appDirOldLoc = path.join(projectRoot, `.${ConfigFolderName}`);
+  if (await fs.pathExists(appDirNewLocForMultiEnv)) {
     return appDirNewLocForMultiEnv;
-  } else if (await fs.pathExists(`${appDirNewLoc}/${REMOTE_MANIFEST}`)) {
+  } else if (await fs.pathExists(path.join(appDirNewLoc, REMOTE_MANIFEST))) {
     return appDirNewLoc;
   } else {
     return appDirOldLoc;
@@ -867,4 +916,37 @@ export function undefinedName(objs: any[], names: string[]) {
 
 export function getPropertyByPath(obj: any, path: string, defaultValue?: string) {
   return _.get(obj, path, defaultValue);
+}
+
+export const AppStudioScopes = [`${getAppStudioEndpoint()}/AppDefinitions.ReadWrite`];
+export const GraphScopes = ["Application.ReadWrite.All", "TeamsAppInstallation.ReadForUser"];
+export const GraphReadUserScopes = ["https://graph.microsoft.com/User.ReadBasic.All"];
+export const SPFxScopes = (tenant: string) => [`${tenant}/Sites.FullControl.All`];
+
+export async function getSPFxTenant(graphToken: string): Promise<string> {
+  const GRAPH_TENANT_ENDPT = "https://graph.microsoft.com/v1.0/sites/root?$select=webUrl";
+  if (graphToken.length > 0) {
+    const response = await axios.get(GRAPH_TENANT_ENDPT, {
+      headers: { Authorization: `Bearer ${graphToken}` },
+    });
+    return response.data.webUrl;
+  }
+  return "";
+}
+
+export async function getSPFxToken(
+  m365TokenProvider: M365TokenProvider
+): Promise<string | undefined> {
+  const graphTokenRes = await m365TokenProvider.getAccessToken({
+    scopes: GraphReadUserScopes,
+  });
+  let spoToken = undefined;
+  if (graphTokenRes && graphTokenRes.isOk()) {
+    const tenant = await getSPFxTenant(graphTokenRes.value);
+    const spfxTokenRes = await m365TokenProvider.getAccessToken({
+      scopes: SPFxScopes(tenant),
+    });
+    spoToken = spfxTokenRes.isOk() ? spfxTokenRes.value : undefined;
+  }
+  return spoToken;
 }

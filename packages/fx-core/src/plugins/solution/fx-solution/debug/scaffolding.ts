@@ -63,6 +63,7 @@ export async function _scaffoldLocalDebugSettings(
   const includeAAD = ProjectSettingsHelper.includeAAD(projectSetting);
   const includeSimpleAuth = ProjectSettingsHelper.includeSimpleAuth(projectSetting);
   const includeFuncHostedBot = ProjectSettingsHelper.includeFuncHostedBot(projectSetting);
+  const botCapabilities = ProjectSettingsHelper.getBotCapabilities(projectSetting);
   const programmingLanguage = projectSetting.programmingLanguage ?? "";
   const isM365 = projectSetting.isM365;
 
@@ -73,7 +74,8 @@ export async function _scaffoldLocalDebugSettings(
     function: includeBackend ? "true" : "false",
     bot: includeBot ? "true" : "false",
     auth: includeAAD && includeSimpleAuth ? "true" : "false",
-    botHostType: includeFuncHostedBot ? BotHostTypes.AzureFunctions : BotHostTypes.AppService,
+    "bot-host-type": includeFuncHostedBot ? BotHostTypes.AzureFunctions : BotHostTypes.AppService,
+    "bot-capabilities": JSON.stringify(botCapabilities),
     "programming-language": programmingLanguage,
   };
   TelemetryUtils.init(telemetryReporter);
@@ -178,11 +180,6 @@ export async function _scaffoldLocalDebugSettings(
         Settings.generateSettings(includeBackend || includeFuncHostedBot, isSpfx),
         Settings.mergeSettings
       );
-    } else if (inputs.platform === Platform.VS) {
-      // generate localSettings.json
-      localSettings = generateLocalSettingsFile
-        ? await scaffoldLocalSettingsJson(projectSetting, inputs, cryptoProvider, localSettings)
-        : undefined;
     }
   } catch (error: any) {
     const systemError = ScaffoldLocalDebugSettingsError(error);
@@ -236,7 +233,7 @@ async function scaffoldLocalSettingsJson(
   return localSettings;
 }
 
-async function useNewTasks(projectPath?: string): Promise<boolean> {
+export async function useNewTasks(projectPath?: string): Promise<boolean> {
   // for new project or project with "validate-local-prerequisites", use new tasks content
   const tasksJsonPath = `${projectPath}/.vscode/tasks.json`;
   if (await fs.pathExists(tasksJsonPath)) {
@@ -251,7 +248,7 @@ async function useNewTasks(projectPath?: string): Promise<boolean> {
   return true;
 }
 
-async function updateJson(
+export async function updateJson(
   path: string,
   newData: Record<string, unknown>,
   mergeFunc: (

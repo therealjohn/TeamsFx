@@ -62,8 +62,7 @@ import {
   getQuestionsForUserTask,
 } from "../../../src/plugins/solution/fx-solution/v2/getQuestions";
 import { BuiltInFeaturePluginNames } from "../../../src/plugins/solution/fx-solution/v3/constants";
-import { MockGraphTokenProvider, MockSharepointTokenProvider } from "../../core/utils";
-import { MockedAppStudioProvider, MockedAzureAccountProvider, MockedV2Context } from "./util";
+import { MockedM365Provider, MockedAzureAccountProvider, MockedV2Context } from "./util";
 import { BotCapabilities, PluginBot } from "../../../src/plugins/resource/bot/resources/strings";
 import { BotHostTypes } from "../../../src";
 
@@ -76,10 +75,8 @@ const frontendPluginV2 = Container.get<v2.ResourcePlugin>(ResourcePluginsV2.Fron
 const botPluginV2 = Container.get<v2.ResourcePlugin>(ResourcePluginsV2.BotPlugin);
 const cicdPlugin = Container.get<v2.ResourcePlugin>(ResourcePluginsV2.CICDPlugin);
 const mockedProvider: TokenProvider = {
-  appStudioToken: new MockedAppStudioProvider(),
   azureAccountProvider: new MockedAzureAccountProvider(),
-  graphTokenProvider: new MockGraphTokenProvider(),
-  sharepointTokenProvider: new MockSharepointTokenProvider(),
+  m365TokenProvider: new MockedM365Provider(),
 };
 const envInfo: EnvInfoV2 = {
   envName: "default",
@@ -390,6 +387,7 @@ describe("getQuestionsForScaffolding()", async () => {
 
   it("getQuestionsForUserTask - addFeature success", async () => {
     sandbox.stub<any, any>(featureFlags, "isPreviewFeaturesEnabled").returns(true);
+    sandbox.stub<any, any>(tool, "canAddCICDWorkflows").resolves(true);
     const mockedCtx = new MockedV2Context(projectSettings);
     const mockedInputs: Inputs = {
       platform: Platform.VSCode,
@@ -455,6 +453,7 @@ describe("getQuestionsForScaffolding()", async () => {
   it("getQuestionsForUserTask - addFeature: message extension", async () => {
     sandbox.stub(featureFlags, "isPreviewFeaturesEnabled").returns(true);
     sandbox.stub(featureFlags, "isBotNotificationEnabled").returns(true);
+    sandbox.stub<any, any>(tool, "canAddCICDWorkflows").resolves(true);
     const projectSettingsWithNotification = {
       appName: "my app",
       projectId: uuid.v4(),
@@ -541,6 +540,7 @@ describe("getQuestionsForScaffolding()", async () => {
   it("getQuestionsForUserTask - addFeature: can add message extension for legacy bot", async () => {
     sandbox.stub(featureFlags, "isPreviewFeaturesEnabled").returns(true);
     sandbox.stub(featureFlags, "isBotNotificationEnabled").returns(true);
+    sandbox.stub<any, any>(tool, "canAddCICDWorkflows").resolves(true);
     const projectSettingsWithNotification = {
       appName: "my app",
       projectId: uuid.v4(),

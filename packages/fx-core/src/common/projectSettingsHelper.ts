@@ -5,7 +5,6 @@ import {
   ConfigFolderName,
   ProjectSettings,
   ProjectSettingsFileName,
-  ProjectSettingsV3,
 } from "@microsoft/teamsfx-api";
 import fs from "fs-extra";
 import * as path from "path";
@@ -19,8 +18,6 @@ import {
 } from "../plugins/solution/fx-solution/question";
 import { BuiltInFeaturePluginNames } from "../plugins/solution/fx-solution/v3/constants";
 import * as uuid from "uuid";
-import { isAadManifestEnabled } from "./tools";
-import { ResourceComponentNames } from "../component/resource";
 
 export function validateProjectSettings(projectSettings: ProjectSettings): string | undefined {
   if (!projectSettings) return "empty projectSettings";
@@ -99,10 +96,17 @@ export function hasSPFx(projectSetting: ProjectSettings): boolean {
 export function hasAzureResource(projectSetting: ProjectSettings, excludeAad = false): boolean {
   const solutionSettings = projectSetting.solutionSettings as AzureSolutionSettings | undefined;
   if (!solutionSettings) return false;
+  const azurePlugins = getAzurePlugins(excludeAad);
+  for (const pluginName of solutionSettings.activeResourcePlugins) {
+    if (azurePlugins.includes(pluginName)) return true;
+  }
+  return false;
+}
+
+export function getAzurePlugins(excludeAad = false): string[] {
   const azurePlugins = [
     BuiltInFeaturePluginNames.apim,
     BuiltInFeaturePluginNames.bot,
-    BuiltInFeaturePluginNames.dotnet,
     BuiltInFeaturePluginNames.frontend,
     BuiltInFeaturePluginNames.function,
     BuiltInFeaturePluginNames.identity,
@@ -113,27 +117,7 @@ export function hasAzureResource(projectSetting: ProjectSettings, excludeAad = f
   if (!excludeAad) {
     azurePlugins.push(BuiltInFeaturePluginNames.aad);
   }
-  for (const pluginName of solutionSettings.activeResourcePlugins) {
-    if (azurePlugins.includes(pluginName)) return true;
-  }
-  return false;
-}
-
-export function hasAzureResourceV3(projectSetting: ProjectSettingsV3, excludeAad = false): boolean {
-  const azureResources = [
-    ResourceComponentNames.apim,
-    ResourceComponentNames.webApp,
-    ResourceComponentNames.function,
-    ResourceComponentNames.identity,
-    ResourceComponentNames.keyVault,
-    ResourceComponentNames.sql,
-    ResourceComponentNames.storage,
-  ];
-  if (!excludeAad) {
-    azureResources.push(ResourceComponentNames.aad);
-  }
-  const filtered = projectSetting.components.filter((c) => azureResources.includes(c.name));
-  return filtered.length > 0;
+  return azurePlugins;
 }
 
 export function isExistingTabApp(projectSettings: ProjectSettings): boolean {

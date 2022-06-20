@@ -20,7 +20,7 @@ import { TaskResult } from "./task";
 import cliLogger from "../../commonlib/log";
 import { TaskFailed } from "./errors";
 import cliTelemetry, { CliTelemetry } from "../../telemetry/cliTelemetry";
-import AppStudioTokenInstance from "../../commonlib/appStudioLogin";
+import M365TokenInstance from "../../commonlib/m365Login";
 import {
   TelemetryEvent,
   TelemetryProperty,
@@ -29,6 +29,7 @@ import {
 import { ServiceLogWriter } from "./serviceLogWriter";
 import open from "open";
 import {
+  AppStudioScopes,
   environmentManager,
   getResourceGroupInPortal,
   isConfigUnifyEnabled,
@@ -50,8 +51,6 @@ export async function openBrowser(
           name: open.apps.chrome,
           arguments: browserArguments,
         },
-        wait: true,
-        allowNonzeroExitCode: true,
       });
       break;
     case constants.Browser.edge:
@@ -60,14 +59,10 @@ export async function openBrowser(
           name: open.apps.edge,
           arguments: browserArguments,
         },
-        wait: true,
-        allowNonzeroExitCode: true,
       });
       break;
     case constants.Browser.default:
-      await open(url, {
-        wait: true,
-      });
+      await open(url);
       break;
   }
 }
@@ -320,7 +315,8 @@ export async function generateAccountHint(
   let tenantId = undefined,
     loginHint = undefined;
   try {
-    const tokenObject = (await AppStudioTokenInstance.getStatus())?.accountInfo;
+    const tokenObjectRes = await M365TokenInstance.getStatus({ scopes: AppStudioScopes });
+    const tokenObject = tokenObjectRes.isOk() ? tokenObjectRes.value.accountInfo : undefined;
     if (tokenObject) {
       // user signed in
       tenantId = tokenObject.tid;
@@ -352,7 +348,17 @@ async function getResourceBaseName(
       `azure.parameters.${env}.json`
     );
     const azureParametersJson = JSON.parse(fs.readFileSync(azureParametersFilePath, "utf-8"));
-    return azureParametersJson.parameters.provisionParameters.value.resourceBaseName;
+    let result: string = azureParametersJson.parameters.provisionParameters.value.resourceBaseName;
+    const placeholder = "{{state.solution.resourceNameSuffix}}";
+    if (result.includes(placeholder)) {
+      const envStateFilesPath = environmentManager.getEnvStateFilesPath(env, workspaceFolder);
+      const envJson = JSON.parse(fs.readFileSync(envStateFilesPath.envState, "utf8"));
+      result = result.replace(
+        placeholder,
+        envJson[constants.solutionPluginName].resourceNameSuffix
+      );
+    }
+    return result;
   } catch {
     return undefined;
   }

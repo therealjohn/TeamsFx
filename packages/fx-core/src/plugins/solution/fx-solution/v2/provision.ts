@@ -12,8 +12,10 @@ import {
   SystemError,
   Platform,
   Colors,
+  Json,
+  TelemetryReporter,
 } from "@microsoft/teamsfx-api";
-import { getResourceGroupInPortal } from "../../../../common/tools";
+import { AppStudioScopes, getResourceGroupInPortal } from "../../../../common/tools";
 import { executeConcurrently } from "./executor";
 import {
   ensurePermissionRequest,
@@ -29,6 +31,10 @@ import {
   SolutionError,
   SOLUTION_PROVISION_SUCCEEDED,
   SolutionSource,
+  SUBSCRIPTION_ID,
+  SolutionTelemetryEvent,
+  SolutionTelemetryComponentName,
+  SolutionTelemetryProperty,
 } from "../constants";
 import _, { isUndefined } from "lodash";
 import { PluginDisplayName } from "../../../../common/constants";
@@ -48,8 +54,49 @@ import {
   isExistingTabApp,
 } from "../../../../common/projectSettingsHelper";
 import { getLocalizedString } from "../../../../common/localizeUtils";
+import { sendErrorTelemetryThenReturnError } from "../utils/util";
+
+function getSubscriptionId(state: Json): string {
+  if (state && state[GLOBAL_CONFIG] && state[GLOBAL_CONFIG][SUBSCRIPTION_ID]) {
+    return state[GLOBAL_CONFIG][SUBSCRIPTION_ID];
+  }
+  return "";
+}
 
 export async function provisionResource(
+  ctx: v2.Context,
+  inputs: Inputs,
+  envInfo: v2.EnvInfoV2,
+  tokenProvider: TokenProvider
+): Promise<Result<Void, FxError>> {
+  ctx.telemetryReporter.sendTelemetryEvent(SolutionTelemetryEvent.ProvisionStart, {
+    [SolutionTelemetryProperty.Component]: SolutionTelemetryComponentName,
+    [SolutionTelemetryProperty.SubscriptionId]: getSubscriptionId(envInfo.state),
+  });
+
+  const result = await provisionResourceImpl(ctx, inputs, envInfo, tokenProvider);
+
+  if (result.isOk()) {
+    ctx.telemetryReporter.sendTelemetryEvent(SolutionTelemetryEvent.Provision, {
+      [SolutionTelemetryProperty.Component]: SolutionTelemetryComponentName,
+      [SolutionTelemetryProperty.SubscriptionId]: getSubscriptionId(envInfo.state),
+      [SolutionTelemetryProperty.Success]: "yes",
+    });
+  } else {
+    sendErrorTelemetryThenReturnError(
+      SolutionTelemetryEvent.Provision,
+      result.error,
+      ctx.telemetryReporter,
+      {
+        [SolutionTelemetryProperty.Component]: SolutionTelemetryComponentName,
+        [SolutionTelemetryProperty.SubscriptionId]: getSubscriptionId(envInfo.state),
+      }
+    );
+  }
+  return result;
+}
+
+async function provisionResourceImpl(
   ctx: v2.Context,
   inputs: Inputs,
   envInfo: v2.EnvInfoV2,
@@ -66,7 +113,12 @@ export async function provisionResource(
   // Just to trigger M365 login before the concurrent execution of localDebug.
   // Because concurrent execution of localDebug may getAccessToken() concurrently, which
   // causes 2 M365 logins before the token caching in common lib takes effect.
-  await tokenProvider.appStudioToken.getAccessToken();
+  const appStudioTokenRes = await tokenProvider.m365TokenProvider.getAccessToken({
+    scopes: AppStudioScopes,
+  });
+  if (appStudioTokenRes.isErr()) {
+    return err(appStudioTokenRes.error);
+  }
 
   const inputsNew: v2.InputsWithProjectPath = inputs as v2.InputsWithProjectPath;
   const projectPath: string = inputs.projectPath;
@@ -78,7 +130,7 @@ export async function provisionResource(
   if (!envInfo.state.solution) envInfo.state.solution = {};
   const solutionConfig = envInfo.state.solution;
   const tenantIdInConfig = teamsAppResource.tenantId;
-  const tenantIdInTokenRes = await getM365TenantId(tokenProvider.appStudioToken);
+  const tenantIdInTokenRes = await getM365TenantId(tokenProvider.m365TokenProvider);
   if (tenantIdInTokenRes.isErr()) {
     return err(tenantIdInTokenRes.error);
   }

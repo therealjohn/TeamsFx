@@ -4,7 +4,6 @@ export enum ConfigurationKey {
   AutomaticNpmInstall = "automaticNpmInstall",
   YoEnvCheckerEnable = "SPFxPrerequisiteCheck.yo",
   generatorEnvCheckerEnable = "SPFxPrerequisiteCheck.sharepointYeomanGenerator",
-  EnablePreviewFeatures = "enablePreviewFeatures",
 }
 
 export const AzurePortalUrl = "https://portal.azure.com";
@@ -30,7 +29,6 @@ export enum GlobalKey {
 }
 
 export enum AadManifestDeployConstants {
-  DEPLOY_AAD_FROM_CODELENS = "deploy-aad-from-codelens",
   INCLUDE_AAD_MANIFEST = "include-aad-manifest",
 }
 

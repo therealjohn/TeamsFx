@@ -285,17 +285,19 @@ export function createCapabilityQuestion(): MultiSelectQuestion {
   };
 }
 
-export function createCapabilityForDotNet(): MultiSelectQuestion {
-  const staticOptions: StaticOptions = [TabOptionItem, BotOptionItem];
+export function createCapabilityForDotNet(): SingleSelectQuestion {
+  const staticOptions: StaticOptions = [
+    NotificationOptionItem,
+    CommandAndResponseOptionItem,
+    TabOptionItem,
+    MessageExtensionItem,
+  ];
   return {
     name: CoreQuestionNames.Capabilities,
     title: getLocalizedString("core.createCapabilityQuestion.title"),
-    type: "multiSelect",
+    type: "singleSelect",
     staticOptions: staticOptions,
     placeholder: getLocalizedString("core.createCapabilityQuestion.placeholder"),
-    validation: {
-      minItems: 1,
-    },
   };
 }
 
@@ -533,7 +535,7 @@ export const ScratchOptionNoVSC: OptionItem = {
 };
 
 export const RuntimeOptionNodeJs: OptionItem = {
-  id: "nodejs",
+  id: "node",
   label: "Node.js",
   detail: getLocalizedString("core.RuntimeOptionNodeJS.detail"),
 };

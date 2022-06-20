@@ -7,6 +7,7 @@ import {
   Inputs,
   InputTextConfig,
   InputTextResult,
+  LoginStatus,
   LogLevel,
   MultiSelectConfig,
   MultiSelectResult,
@@ -20,6 +21,7 @@ import {
   SingleSelectConfig,
   SingleSelectResult,
   SubscriptionInfo,
+  TokenRequest,
   Void,
 } from "@microsoft/teamsfx-api";
 import {
@@ -46,6 +48,7 @@ export enum Namespaces {
   Graph = "graph",
   AppStudio = "appStudio",
   SharePoint = "sharepoint",
+  M365 = "m365",
   UserInteraction = "ui",
   Telemetry = "telemetry",
 }
@@ -160,28 +163,15 @@ export const RequestTypes = {
       `${Namespaces.Azure}/getSelectedSubscriptionRequest`
     ),
   },
-  [Namespaces.Graph]: {
-    getAccessToken: new RequestType0<Result<string, FxError>, Error>(
-      `${Namespaces.Graph}/getAccessTokenRequest`
+  [Namespaces.M365]: {
+    getAccessToken: new RequestType1<TokenRequest, Result<string, FxError>, Error>(
+      `${Namespaces.M365}/getAccessTokenRequest`
     ),
-    getJsonObject: new RequestType0<Result<string, FxError>, Error>(
-      `${Namespaces.Graph}/getJsonObjectRequest`
+    getJsonObject: new RequestType1<TokenRequest, Result<string, FxError>, Error>(
+      `${Namespaces.M365}/getJsonObjectRequest`
     ),
-  },
-  [Namespaces.AppStudio]: {
-    getAccessToken: new RequestType0<Result<string, FxError>, Error>(
-      `${Namespaces.AppStudio}/getAccessTokenRequest`
-    ),
-    getJsonObject: new RequestType0<Result<string, FxError>, Error>(
-      `${Namespaces.AppStudio}/getJsonObjectRequest`
-    ),
-  },
-  [Namespaces.SharePoint]: {
-    getAccessToken: new RequestType0<Result<string, FxError>, Error>(
-      `${Namespaces.SharePoint}/getAccessTokenRequest`
-    ),
-    getJsonObject: new RequestType0<Result<string, FxError>, Error>(
-      `${Namespaces.SharePoint}/getJsonObjectRequest`
+    getStatus: new RequestType1<TokenRequest, Result<LoginStatus, FxError>, Error>(
+      `${Namespaces.M365}/getStatusRequest`
     ),
   },
 

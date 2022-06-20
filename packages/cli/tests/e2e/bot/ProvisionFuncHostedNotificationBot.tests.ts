@@ -19,7 +19,6 @@ import {
   cleanUp,
   readContextMultiEnv,
 } from "../commonUtils";
-import AppStudioLogin from "../../../src/commonlib/appStudioLogin";
 import { environmentManager } from "@microsoft/teamsfx-core";
 
 import { it } from "../../commonlib/it";
@@ -70,13 +69,9 @@ describe("Provision", function () {
       // Get context
       const context = await readContextMultiEnv(projectPath, envName);
 
-      // Validate Aad App
-      const aad = AadValidator.init(context, false, AppStudioLogin);
-      await AadValidator.validate(aad);
-
       // Validate Bot Provision
       const bot = new BotValidator(context, projectPath, envName);
-      await bot.validateProvision();
+      await bot.validateProvision(false);
     }
 
     // deploy
@@ -115,6 +110,6 @@ describe("Provision", function () {
 
   this.afterEach(async () => {
     console.log(`[Successfully] start to clean up for ${projectPath}`);
-    await cleanUp(appName, projectPath, true, true, false);
+    await cleanUp(appName, projectPath, false, true, false);
   });
 });

@@ -1,23 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Inputs, ResourceTemplate, Void } from "@microsoft/teamsfx-api";
+import { ResourceTemplate, TokenProvider, Void } from "@microsoft/teamsfx-api";
 import { Context } from "@microsoft/teamsfx-api/build/v2";
 import * as fs from "fs-extra";
 import path from "path";
 import { generateBicepFromFile } from "..";
-import { ArmTemplateResult } from "../armInterface";
 import { Bicep } from "../constants";
 import { getTemplatesFolder } from "../../folder";
-import { BicepContext } from "./interfaces";
+import { BicepContext, Logger, ServiceType } from "./interfaces";
+import { Messages } from "./messages";
+import { getHandlebarContext } from "./utils";
 
 export abstract class AzureHosting {
-  abstract hostType: string;
+  abstract hostType: ServiceType;
   abstract configurable: boolean;
 
   reference: any = undefined;
+  logger?: Logger;
 
-  private getBicepTemplateFolder(): string {
+  protected getBicepTemplateFolder(): string {
     return path.join(
       getTemplatesFolder(),
       "plugins",
@@ -28,7 +30,7 @@ export abstract class AzureHosting {
     );
   }
 
-  async generateBicep(bicepContext: BicepContext, pluginId: string): Promise<ResourceTemplate> {
+  async generateBicep(bicepContext: BicepContext): Promise<ResourceTemplate> {
     // * The order matters.
     // * 0: Provision Orchestration, 1: Provision Module, 2: Configuration Orchestration, 3: Configuration Module
     const bicepFiles = [Bicep.ProvisionFileName, `${this.hostType}Provision.template.bicep`];
@@ -37,16 +39,14 @@ export abstract class AzureHosting {
       bicepFiles.push(`${this.hostType}Configuration.template.bicep`);
     }
 
+    const context = getHandlebarContext(bicepContext, this.hostType);
+
     const bicepTemplateDir = this.getBicepTemplateFolder();
     const modules = await Promise.all(
-      bicepFiles.map(async (filename) => {
-        const module = await generateBicepFromFile(
-          path.join(bicepTemplateDir, filename),
-          bicepContext
-        );
-        // TODO: leverage HandleBars to replace plugin id
-        return module.replace(/PluginIdPlaceholder/g, pluginId);
-      })
+      bicepFiles.map(
+        async (filename) =>
+          await generateBicepFromFile(path.join(bicepTemplateDir, filename), context)
+      )
     );
 
     // parameters should be undefined if parameter file does not exist
@@ -56,15 +56,19 @@ export abstract class AzureHosting {
       parameters = await fs.readJson(parameterFilePath);
     }
 
+    this.logger?.info?.(Messages.generateBicep(this.hostType));
+
     return {
       Provision: {
         Orchestration: modules[0],
-        Modules: { [this.hostType]: modules[1] },
+        Modules: { [context.moduleName!]: modules[1] },
       },
       Configuration: this.configurable
         ? {
             Orchestration: modules[2],
-            Modules: { [this.hostType]: modules[3] },
+            Modules: {
+              [context.moduleName!]: modules[3],
+            },
           }
         : undefined,
       Reference: this.reference,
@@ -72,13 +76,44 @@ export abstract class AzureHosting {
     } as ResourceTemplate;
   }
 
-  async updateBicep(bicepContext: BicepContext, pluginId: string): Promise<ResourceTemplate> {
-    return {} as ArmTemplateResult;
+  async updateBicep(bicepContext: BicepContext): Promise<ResourceTemplate> {
+    // * The order matters.
+    // * 0: Configuration Orchestration, 1: Configuration Module
+    if (!this.configurable) {
+      this.logger?.debug?.(Messages.updateBicep(this.hostType));
+      return {} as ResourceTemplate;
+    }
+    const bicepFile = `${this.hostType}Configuration.template.bicep`;
+    const context = getHandlebarContext(bicepContext, this.hostType);
+
+    const bicepTemplateDir = this.getBicepTemplateFolder();
+    const module = await generateBicepFromFile(path.join(bicepTemplateDir, bicepFile), context);
+
+    this.logger?.info?.(Messages.updateBicep(this.hostType));
+
+    return {
+      Configuration: {
+        Modules: { [context.moduleName!]: module },
+      },
+      Reference: this.reference,
+    } as ResourceTemplate;
   }
+
   async configure(ctx: Context): Promise<Void> {
     return Void;
   }
-  async deploy(ctx: Context, inputs: Inputs): Promise<Void> {
+
+  /**
+   * deploy to Azure
+   * @param resourceId Azure resource id
+   * @param tokenProvider token environment
+   * @param buffer zip file stream buffer
+   */
+  async deploy(resourceId: string, tokenProvider: TokenProvider, buffer: Buffer): Promise<Void> {
     return Void;
+  }
+
+  setLogger(logger: any): void {
+    this.logger = logger;
   }
 }

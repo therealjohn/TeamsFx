@@ -21,6 +21,7 @@ import { needMigrateToArmAndMultiEnv } from "./projectMigrator";
 import { needConsolidateLocalRemote } from "./consolidateLocalRemote";
 import * as os from "os";
 import {
+  generateAadManifest,
   needMigrateToAadManifest,
   Permission,
   permissionsToRequiredResourceAccess,
@@ -43,7 +44,6 @@ export const AadManifestMigrationMW: Middleware = async (
   } else if (await needConsolidateLocalRemote(ctx)) {
     await next();
   } else if ((await needMigrateToAadManifest(ctx)) && checkMethod(ctx)) {
-    sendTelemetryEvent(Component.core, TelemetryEvent.ProjectMigratorNotificationStart);
     await upgrade(ctx, next);
   } else {
     await next();
@@ -81,34 +81,27 @@ async function migrate(ctx: CoreHookContext): Promise<boolean> {
     "configs",
     "projectSettings.json"
   );
-  const permissionFilePath = path.join(inputs.projectPath as string, "permissions.json");
 
   try {
     sendTelemetryEvent(
       Component.core,
       TelemetryEvent.ProjectAadManifestMigrationAddAADTemplateStart
     );
-    // add aad.template.file
-    const permissions = (await fs.readJson(permissionFilePath)) as Permission[];
+    const projectSettingsJson = await fs.readJson(projectSettingsPath);
 
-    const requiredResourceAccess = permissionsToRequiredResourceAccess(permissions);
+    await generateAadManifest(inputs.projectPath!, projectSettingsJson);
+
     const aadManifestPath = path.join(
       inputs.projectPath as string,
       "templates",
       "appPackage",
       "aad.template.json"
     );
-    const projectSettingsJson = await fs.readJson(projectSettingsPath);
-    await generateAadManifestTemplate(
-      inputs.projectPath!,
-      projectSettingsJson,
-      requiredResourceAccess,
-      true
-    );
-
     fileList.push(aadManifestPath);
 
     await fs.writeJSON(projectSettingsPath, projectSettingsJson, { spaces: 4, EOL: os.EOL });
+
+    sendTelemetryEvent(Component.core, TelemetryEvent.ProjectAadManifestMigrationAddAADTemplate);
 
     // backup
     sendTelemetryEvent(Component.core, TelemetryEvent.ProjectAadManifestMigrationBackupStart);
@@ -131,11 +124,11 @@ async function migrate(ctx: CoreHookContext): Promise<boolean> {
     throw e;
   }
 
-  sendTelemetryEvent(Component.core, TelemetryEvent.ProjectAadManifestMigrationAddAADTemplate);
-
   postMigration(inputs);
 
   generateUpgradeReport(path.join(inputs.projectPath as string, backupFolder));
+
+  sendTelemetryEvent(Component.core, TelemetryEvent.ProjectAadManifestMigration);
 
   return true;
 }

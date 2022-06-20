@@ -23,14 +23,10 @@ import {
   Void,
 } from "@microsoft/teamsfx-api";
 import { Container } from "typedi";
-import { createV2Context, deepCopy } from "../../common/tools";
+import { createV2Context, deepCopy, isExistingTabAppEnabled } from "../../common/tools";
 import { newProjectSettings } from "../../common/projectSettingsHelper";
 import { SPFxPluginV3 } from "../../plugins/resource/spfx/v3";
-import {
-  AzureSolutionQuestionNames,
-  ExistingTabOptionItem,
-  TabSPFxItem,
-} from "../../plugins/solution/fx-solution/question";
+import { ExistingTabOptionItem, TabSPFxItem } from "../../plugins/solution/fx-solution/question";
 import {
   BuiltInFeaturePluginNames,
   BuiltInSolutionNames,
@@ -39,7 +35,6 @@ import { getQuestionsForGrantPermission } from "../collaborator";
 import { CoreSource, FunctionRouterError } from "../error";
 import { TOOLS } from "../globalVars";
 import {
-  CoreQuestionNames,
   createAppNameQuestion,
   createCapabilityForDotNet,
   createCapabilityQuestion,
@@ -59,7 +54,6 @@ import {
 import { getAllSolutionPluginsV2 } from "../SolutionPluginContainer";
 import { CoreHookContext } from "../types";
 import { isPreviewFeaturesEnabled, isCLIDotNetEnabled } from "../../common";
-import { TeamsAppSolutionNameV2 } from "../../plugins/solution/fx-solution/v2/constants";
 
 /**
  * This middleware will help to collect input from question flow
@@ -73,7 +67,7 @@ export const QuestionModelMW: Middleware = async (ctx: CoreHookContext, next: Ne
   if (method === "createProjectV2") {
     getQuestionRes = await core._getQuestionsForCreateProjectV2(inputs);
   } else if (method === "createProjectV3") {
-    getQuestionRes = await core._getQuestionsForCreateProjectV3(inputs);
+    getQuestionRes = await core._getQuestionsForCreateProjectV2(inputs);
   } else if (method === "init" || method === "_init") {
     getQuestionRes = await core._getQuestionsForInit(inputs);
   } else if (
@@ -308,7 +302,7 @@ export async function getQuestionsForPublish(
       context,
       inputs,
       envInfo,
-      TOOLS.tokenProvider.appStudioToken
+      TOOLS.tokenProvider.m365TokenProvider
     );
     return res;
   }
@@ -460,17 +454,13 @@ async function getQuestionsForCreateProjectWithoutDotNet(
   capNode.addChild(programmingLanguage);
 
   // existing tab endpoint
-  const existingTabEndpoint = new QTreeNode(ExistingTabEndpointQuestion);
-  if (isPreviewFeaturesEnabled()) {
+  if (isExistingTabAppEnabled()) {
+    const existingTabEndpoint = new QTreeNode(ExistingTabEndpointQuestion);
     existingTabEndpoint.condition = {
       equals: ExistingTabOptionItem.id,
     };
-  } else {
-    existingTabEndpoint.condition = {
-      contains: ExistingTabOptionItem.id,
-    };
+    capNode.addChild(existingTabEndpoint);
   }
-  capNode.addChild(existingTabEndpoint);
 
   createNew.addChild(new QTreeNode(QuestionRootFolder));
   createNew.addChild(new QTreeNode(createAppNameQuestion()));
@@ -506,11 +496,16 @@ async function getQuestionsForCreateProjectWithDotNet(
     equals: RuntimeOptionDotNet.id,
   };
   runtimeNode.addChild(dotnetNode);
+
   const dotnetCapNode = new QTreeNode(createCapabilityForDotNet());
   dotnetNode.addChild(dotnetCapNode);
-  dotnetNode.addChild(new QTreeNode(ProgrammingLanguageQuestionForDotNet));
 
-  inputs[AzureSolutionQuestionNames.Solution] = TeamsAppSolutionNameV2;
+  const solutionNodeResult = await setSolutionScaffoldingQuestionNodeAsChild(inputs, dotnetCapNode);
+  if (solutionNodeResult.isErr()) {
+    return err(solutionNodeResult.error);
+  }
+
+  dotnetCapNode.addChild(new QTreeNode(ProgrammingLanguageQuestionForDotNet));
 
   // only CLI need folder input
   if (CLIPlatforms.includes(inputs.platform)) {
