@@ -351,10 +351,12 @@ export async function executeAction(
   inputs: InputsWithProjectPath,
   effects: Effect[]
 ): Promise<Result<undefined, FxError>> {
+  console.log(`executeAction: ${action.name}`);
   if (action.type === "function") {
     return await executeFunctionAction(action, context, inputs, effects);
   } else if (action.type === "shell") {
     effects.push(`shell executed: ${action.command}`);
+    return ok(undefined);
   } else if (action.type === "call") {
     if (action.inputs) {
       resolveVariables(inputs, action.inputs);
@@ -364,8 +366,9 @@ export async function executeAction(
       return err(new ActionNotExist(action.targetAction));
     }
     if (targetAction) {
-      await executeAction(targetAction, context, inputs, effects);
+      return await executeAction(targetAction, context, inputs, effects);
     }
+    return ok(undefined);
   } else {
     if (action.inputs) {
       resolveVariables(inputs, action.inputs);
@@ -382,8 +385,8 @@ export async function executeAction(
         if (res.isErr()) return err(res.error);
       }
     }
+    return ok(undefined);
   }
-  return ok(undefined);
 }
 
 export class ValidationError extends UserError {
@@ -420,6 +423,7 @@ export async function executeFunctionAction(
   inputs: InputsWithProjectPath,
   effects: Effect[]
 ): Promise<Result<undefined, FxError>> {
+  context.logProvider.info(`executeFunctionAction [${action.name}] start!`);
   // validate inputs
   if (action.question) {
     const getQuestionRes = await action.question(context, inputs);
@@ -446,14 +450,14 @@ export async function executeFunctionAction(
         if (bicep) {
           const bicepPlans = persistBicepPlans(inputs.projectPath, bicep);
           bicepPlans.forEach((p) => effects.push(p));
-          await persistBicep(inputs.projectPath, bicep);
+          await persistBicep(inputs.projectPath, context.projectSetting.appName, bicep);
         }
       } else {
         effects.push(effect);
       }
     }
   }
-  context.logProvider.info(`##### executed [${action.name}]`);
+  context.logProvider.info(`executeFunctionAction [${action.name}] finish!`);
   return ok(undefined);
 }
 

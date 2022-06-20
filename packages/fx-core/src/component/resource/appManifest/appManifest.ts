@@ -20,6 +20,7 @@ import * as path from "path";
 import "reflect-metadata";
 import { Service } from "typedi";
 import { isBotNotificationEnabled } from "../../../common/featureFlags";
+import { hasTab } from "../../../common/projectSettingsHelperV3";
 import { getTemplatesFolder } from "../../../folder";
 import {
   BOTS_TPL_EXISTING_APP,
@@ -38,6 +39,7 @@ import {
   AzureSolutionQuestionNames,
   BotScenario,
 } from "../../../plugins/solution/fx-solution/question";
+import { ComponentNames } from "../../constants";
 import { createOrUpdateTeamsApp, publishTeamsApp } from "./appStudio";
 import {
   BOTS_TPL_FOR_COMMAND_AND_RESPONSE_V3,
@@ -87,7 +89,7 @@ export class AppManifest implements CloudResource {
         const existingApp = inputs.existingApp as boolean;
         const manifestString = TEAMS_APP_MANIFEST_TEMPLATE;
         const manifest = JSON.parse(manifestString);
-        if (existingApp) {
+        if (existingApp || !hasTab(context.projectSetting)) {
           manifest.developer = {
             name: "Teams App, Inc.",
             websiteUrl: DEFAULT_DEVELOPER_WEBSITE_URL,
@@ -244,7 +246,7 @@ export class AppManifest implements CloudResource {
           {
             type: "service",
             name: "teams.microsoft.com",
-            remarks: "register or update teams app",
+            remarks: "create or update teams app",
           },
         ]);
       },
@@ -252,11 +254,13 @@ export class AppManifest implements CloudResource {
         const ctx = context as ProvisionContextV3;
         const res = await createOrUpdateTeamsApp(ctx, inputs, ctx.envInfo, ctx.tokenProvider);
         if (res.isErr()) return err(res.error);
+        ctx.envInfo.state[ComponentNames.AppManifest].teamsAppId = res.value;
+        ctx.logProvider.info(`teams app created/updated: ${res.value}`);
         return ok([
           {
             type: "service",
             name: "teams.microsoft.com",
-            remarks: "register or update teams app",
+            remarks: "create or update teams app",
           },
         ]);
       },
@@ -291,7 +295,7 @@ export class AppManifest implements CloudResource {
           ctx,
           inputs,
           ctx.envInfo,
-          ctx.tokenProvider.appStudioToken
+          ctx.tokenProvider.m365TokenProvider
         );
         if (res.isErr()) return err(res.error);
         return ok([

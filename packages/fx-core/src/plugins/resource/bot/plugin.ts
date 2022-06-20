@@ -21,13 +21,7 @@ import { getZipDeployEndpoint } from "./utils/zipDeploy";
 
 import * as appService from "@azure/arm-appservice";
 import * as fs from "fs-extra";
-import {
-  CommonStrings,
-  PluginBot,
-  ConfigNames,
-  PluginLocalDebug,
-  HostTypes,
-} from "./resources/strings";
+import { CommonStrings, PluginBot, ConfigNames, PluginLocalDebug } from "./resources/strings";
 import {
   checkAndThrowIfMissing,
   PackDirExistenceError,
@@ -54,6 +48,8 @@ import {
   isBotNotificationEnabled,
   generateBicepFromFile,
   isConfigUnifyEnabled,
+  AppStudioScopes,
+  GraphScopes,
 } from "../../../common";
 import { getActivatedV2ResourcePlugins } from "../../solution/fx-solution/ResourcePluginContainer";
 import { NamedArmResourcePluginAdaptor } from "../../solution/fx-solution/v2/adaptor";
@@ -61,6 +57,7 @@ import { PluginImpl } from "./interface";
 import { BOT_ID } from "../appstudio/constants";
 import { AzureOperations } from "../../../common/azure-hosting/azureOps";
 import { AzureUploadConfig } from "../../../common/azure-hosting/interfaces";
+import { HostType } from "./v2/enum";
 
 export class TeamsBotImpl implements PluginImpl {
   // Made config public, because expect the upper layer to fill inputs.
@@ -89,7 +86,7 @@ export class TeamsBotImpl implements PluginImpl {
     await handler?.start(ProgressBarConstants.SCAFFOLD_STEP_START);
 
     if (isBotNotificationEnabled()) {
-      this.config.scaffold.hostType = HostTypes.APP_SERVICE;
+      this.config.scaffold.hostType = HostType.AppService;
     }
 
     // 1. Copy the corresponding template project into target directory.
@@ -397,9 +394,12 @@ export class TeamsBotImpl implements PluginImpl {
   }
 
   private async updateMessageEndpointOnAppStudio(endpoint: string) {
+    const appStudioTokenRes = await this.ctx?.m365TokenProvider?.getAccessToken({
+      scopes: AppStudioScopes,
+    });
     const appStudioToken = checkAndThrowIfMissing(
       ConfigNames.APPSTUDIO_TOKEN,
-      await this.ctx?.appStudioToken?.getAccessToken()
+      appStudioTokenRes?.isOk() ? appStudioTokenRes.value : undefined
     );
     checkAndThrowIfMissing(
       ConfigNames.LOCAL_BOT_ID,
@@ -422,11 +422,14 @@ export class TeamsBotImpl implements PluginImpl {
     await AppStudio.updateMessageEndpoint(appStudioToken, botReg.botId!, botReg);
   }
   private async createNewBotRegistrationOnAppStudio() {
+    const graphTokenRes = await this.ctx?.m365TokenProvider?.getAccessToken({
+      scopes: GraphScopes,
+    });
     Logger.info(Messages.ProvisioningBotRegistration);
 
     const token = checkAndThrowIfMissing(
       ConfigNames.GRAPH_TOKEN,
-      await this.ctx?.graphTokenProvider?.getAccessToken()
+      graphTokenRes?.isOk() ? graphTokenRes.value : undefined
     );
     const name = checkAndThrowIfMissing(
       CommonStrings.SHORT_APP_NAME,
@@ -483,9 +486,14 @@ export class TeamsBotImpl implements PluginImpl {
       callingEndpoint: "",
     };
 
+    Logger.info(Messages.ProvisioningBotRegistration);
+    const appStudioTokenRes = await this.ctx?.m365TokenProvider?.getAccessToken({
+      scopes: AppStudioScopes,
+    });
+
     const appStudioToken = checkAndThrowIfMissing(
       ConfigNames.APPSTUDIO_TOKEN,
-      await this.ctx?.appStudioToken?.getAccessToken()
+      appStudioTokenRes?.isOk() ? appStudioTokenRes.value : undefined
     );
 
     await AppStudio.createBotRegistration(appStudioToken, botReg);
@@ -518,9 +526,12 @@ export class TeamsBotImpl implements PluginImpl {
   }
 
   private async registerBotApp() {
+    const graphTokenRes = await this.ctx?.m365TokenProvider?.getAccessToken({
+      scopes: GraphScopes,
+    });
     const token = checkAndThrowIfMissing(
       ConfigNames.GRAPH_TOKEN,
-      await this.ctx?.graphTokenProvider?.getAccessToken()
+      graphTokenRes?.isOk() ? graphTokenRes.value : undefined
     );
     const name = checkAndThrowIfMissing(
       CommonStrings.SHORT_APP_NAME,

@@ -72,6 +72,7 @@ import {
   canAddCICDWorkflows,
   isAadManifestEnabled,
   isDeployManifestEnabled,
+  AppStudioScopes,
 } from "../../../../common/tools";
 import {
   isBotNotificationEnabled,
@@ -416,7 +417,7 @@ export async function getQuestions(
       }
     }
   } else if (stage === Stage.deploy) {
-    if (inputs[Constants.DEPLOY_AAD_FROM_CODELENS] === "yes") {
+    if (inputs.platform === Platform.VSCode && inputs[Constants.INCLUDE_AAD_MANIFEST] === "yes") {
       return ok(node);
     }
 
@@ -457,11 +458,6 @@ export async function getQuestions(
 
     if (plugins.length === 0 && inputs[Constants.INCLUDE_AAD_MANIFEST] !== "yes") {
       return err(new NoCapabilityFoundError(Stage.deploy));
-    }
-
-    // trigger from Deploy AAD App manifest command in VSCode
-    if (inputs.platform === Platform.VSCode && inputs[Constants.INCLUDE_AAD_MANIFEST] === "yes") {
-      return ok(node);
     }
 
     // On VS, users are not expected to select plugins to deploy.
@@ -534,7 +530,10 @@ export async function getQuestions(
     }
   } else if (stage === Stage.grantPermission) {
     if (isDynamicQuestion) {
-      const jsonObject = await tokenProvider.appStudioToken.getJsonObject();
+      const jsonObjectRes = await tokenProvider.m365TokenProvider.getJsonObject({
+        scopes: AppStudioScopes,
+      });
+      const jsonObject = jsonObjectRes.isOk() ? jsonObjectRes.value : undefined;
       node.addChild(new QTreeNode(getUserEmailQuestion((jsonObject as any).upn)));
     }
   }

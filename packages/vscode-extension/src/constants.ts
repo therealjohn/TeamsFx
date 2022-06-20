@@ -29,7 +29,6 @@ export enum GlobalKey {
 }
 
 export enum AadManifestDeployConstants {
-  DEPLOY_AAD_FROM_CODELENS = "deploy-aad-from-codelens",
   INCLUDE_AAD_MANIFEST = "include-aad-manifest",
 }
 

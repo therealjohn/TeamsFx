@@ -3,9 +3,7 @@
 
 import {
   Action,
-  CloudResource,
   ContextV3,
-  err,
   FxError,
   InputsWithProjectPath,
   MaybePromise,
@@ -15,11 +13,8 @@ import {
 import fs from "fs-extra";
 import * as path from "path";
 import "reflect-metadata";
-import { Container, Service } from "typedi";
-import { LocalCrypto } from "../core/crypto";
+import { Service } from "typedi";
 import { environmentManager } from "../core/environment";
-import { loadEnvInfoV3 } from "../core/middleware/envInfoLoaderV3";
-import { createFilesEffects } from "./utils";
 
 @Service("env-manager")
 export class EnvManager {
@@ -85,7 +80,7 @@ export class EnvManager {
   //       return ok([]);
   //     },
   //     execute: async (context: ContextV3, inputs: InputsWithProjectPath) => {
-  //       const envName = inputs.envName;
+  //       const envName = inputs.targetEnvName;
   //       const envInfoRes = await loadEnvInfoV3(inputs, context.projectSetting, envName);
   //       if (envInfoRes.isErr()) return err(envInfoRes.error);
   //       context.envInfo = envInfoRes.value;

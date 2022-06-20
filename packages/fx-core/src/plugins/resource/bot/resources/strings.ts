@@ -72,6 +72,7 @@ export class PluginBot {
   public static readonly VALID_DOMAIN = "validDomain";
   public static readonly BOT_CHANNEL_REGISTRATION = "botChannelReg";
   public static readonly BOT_WEB_APP_RESOURCE_ID = "botWebAppResourceId";
+  public static readonly RESOURCE_ID = "resourceId";
   public static readonly UNPACK_FLAG = "unPackFlag";
   public static readonly HOST_TYPE = "host-type";
   // Bot capabilities, for example: notification, command-and-response.
@@ -122,13 +123,6 @@ export const QuestionBotScenarioToBotCapability = new Map<BotScenario, BotCapabi
   [BotScenario.NotificationBot, BotCapabilities.NOTIFICATION],
   [BotScenario.CommandAndResponseBot, BotCapabilities.COMMAND_AND_RESPONSE],
 ]);
-
-export const HostTypes = {
-  APP_SERVICE: "app-service",
-  AZURE_FUNCTIONS: "azure-functions",
-} as const;
-
-export type HostType = typeof HostTypes[keyof typeof HostTypes];
 
 export const NotificationTriggers = {
   HTTP: "http",

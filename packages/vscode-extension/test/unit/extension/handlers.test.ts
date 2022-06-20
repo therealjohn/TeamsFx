@@ -14,14 +14,18 @@ import {
   Void,
   Result,
   FxError,
+  ProjectSettings,
+  ConfigFolderName,
+  ProjectSettingsFileName,
 } from "@microsoft/teamsfx-api";
-import AppStudioTokenInstance from "../../../src/commonlib/appStudioLogin";
+import M365TokenInstance from "../../../src/commonlib/m365Login";
 import { ExtTelemetry } from "../../../src/telemetry/extTelemetry";
 import { WebviewPanel } from "../../../src/controls/webviewPanel";
 import { PanelType } from "../../../src/controls/PanelType";
 import { AzureAccountManager } from "../../../src/commonlib/azureLogin";
 import { MockCore } from "./mocks/mockCore";
 import * as commonUtils from "../../../src/utils/commonUtils";
+import { localize } from "../../../src/utils/localizeUtils";
 import * as extension from "../../../src/extension";
 import TreeViewManagerInstance from "../../../src/treeview/treeViewManager";
 import { CollaborationState, CoreHookContext } from "@microsoft/teamsfx-core";
@@ -31,7 +35,12 @@ import { Uri } from "vscode";
 import envTreeProviderInstance from "../../../src/treeview/environmentTreeViewProvider";
 import accountTreeViewProviderInstance from "../../../src/treeview/account/accountTreeViewProvider";
 import * as extTelemetryEvents from "../../../src/telemetry/extTelemetryEvents";
+import { ExtensionErrors } from "../../../src/error";
 import * as uuid from "uuid";
+import * as fs from "fs-extra";
+import * as path from "path";
+import * as util from "util";
+import * as os from "os";
 
 suite("handlers", () => {
   suite("activate()", function () {
@@ -40,8 +49,6 @@ suite("handlers", () => {
 
     this.beforeAll(() => {
       sandbox.stub(accountTreeViewProviderInstance, "subscribeToStatusChanges");
-      setStatusChangeMap = sandbox.stub(AzureAccountManager.prototype, "setStatusChangeMap");
-      sandbox.stub(AppStudioTokenInstance, "setStatusChangeMap");
       sandbox.stub(vscode.extensions, "getExtension").returns(undefined);
       sandbox.stub(TreeViewManagerInstance, "getTreeView").returns(undefined);
       sandbox.stub(ExtTelemetry, "dispose");
@@ -54,12 +61,6 @@ suite("handlers", () => {
     test("No globalState error", async () => {
       const result = await handlers.activate();
       chai.assert.deepEqual(result.isOk() ? result.value : result.error.name, {});
-    });
-
-    test("Don't listen to Azure account notify for non-Teamsfx project", async () => {
-      await handlers.activate();
-
-      chai.assert.isTrue(setStatusChangeMap.notCalled);
     });
   });
 
@@ -158,6 +159,43 @@ suite("handlers", () => {
     this.afterEach(() => {
       sinon.restore();
     });
+
+    test("openConfigStateFile() - local", async () => {
+      const env = "local";
+      const tmpDir = fs.mkdtempSync(path.resolve("./tmp"));
+
+      sinon.stub(ExtTelemetry, "sendTelemetryEvent");
+      sinon.stub(ExtTelemetry, "sendTelemetryErrorEvent");
+
+      sinon.stub(globalVariables, "workspaceUri").value(Uri.file(tmpDir));
+      const projectSettings: ProjectSettings = {
+        appName: "myapp",
+        version: "1.0.0",
+        projectId: "123",
+      };
+      const configFolder = path.resolve(tmpDir, `.${ConfigFolderName}`, "configs");
+      await fs.mkdir(configFolder, { recursive: true });
+      const settingsFile = path.resolve(configFolder, ProjectSettingsFileName);
+      await fs.writeJSON(settingsFile, JSON.stringify(projectSettings, null, 4));
+
+      sinon.stub(globalVariables, "context").value({ extensionPath: path.resolve("../../") });
+      sinon.stub(extension, "VS_CODE_UI").value({
+        selectOption: () => Promise.resolve(ok({ type: "success", result: env })),
+      });
+
+      const res = await handlers.openConfigStateFile([]);
+      await fs.remove(tmpDir);
+
+      if (res) {
+        chai.assert.isTrue(res.isErr());
+        chai.assert.equal(res.error.name, ExtensionErrors.EnvStateNotFoundError);
+        chai.assert.equal(
+          res.error.message,
+          util.format(localize("teamstoolkit.handlers.localStateFileNotFound"), env)
+        );
+      }
+    });
+
     test("create sample with projectid", async () => {
       sinon.stub(handlers, "core").value(new MockCore());
       const sendTelemetryEvent = sinon.stub(ExtTelemetry, "sendTelemetryEvent");
@@ -338,7 +376,7 @@ suite("handlers", () => {
   });
 
   test("signOutM365", async () => {
-    const signOut = sinon.stub(AppStudioTokenInstance, "signout");
+    const signOut = sinon.stub(M365TokenInstance, "signout");
     const sendTelemetryEvent = sinon.stub(ExtTelemetry, "sendTelemetryEvent");
     sinon.stub(envTreeProviderInstance, "reloadEnvironments");
 
@@ -438,9 +476,11 @@ suite("handlers", () => {
       const sendTelemetryEvent = sinon.stub(ExtTelemetry, "sendTelemetryEvent");
       const sendTelemetryErrorEvent = sinon.stub(ExtTelemetry, "sendTelemetryErrorEvent");
       sinon.stub(commonUtils, "getProvisionSucceedFromEnv").resolves(true);
-      sinon.stub(AppStudioTokenInstance, "getJsonObject").resolves({
-        tid: "fake-tenant-id",
-      });
+      sinon.stub(M365TokenInstance, "getJsonObject").resolves(
+        ok({
+          tid: "fake-tenant-id",
+        })
+      );
 
       sinon.stub(globalVariables, "workspaceUri").value(Uri.parse("file://fakeProjectPath"));
       sinon.stub(globalVariables, "isSPFxProject").value(false);
@@ -477,9 +517,11 @@ suite("handlers", () => {
       const sendTelemetryEvent = sinon.stub(ExtTelemetry, "sendTelemetryEvent");
       const sendTelemetryErrorEvent = sinon.stub(ExtTelemetry, "sendTelemetryErrorEvent");
       sinon.stub(commonUtils, "getProvisionSucceedFromEnv").resolves(true);
-      sinon.stub(AppStudioTokenInstance, "getJsonObject").resolves({
-        tid: "fake-tenant-id",
-      });
+      sinon.stub(M365TokenInstance, "getJsonObject").resolves(
+        ok({
+          tid: "fake-tenant-id",
+        })
+      );
       sinon.stub(commonUtils, "getM365TenantFromEnv").callsFake(async (env: string) => {
         return "";
       });
@@ -499,9 +541,11 @@ suite("handlers", () => {
       const sendTelemetryEvent = sinon.stub(ExtTelemetry, "sendTelemetryEvent");
       const sendTelemetryErrorEvent = sinon.stub(ExtTelemetry, "sendTelemetryErrorEvent");
       sinon.stub(commonUtils, "getProvisionSucceedFromEnv").resolves(true);
-      sinon.stub(AppStudioTokenInstance, "getJsonObject").resolves({
-        tid: "fake-tenant-id",
-      });
+      sinon.stub(M365TokenInstance, "getJsonObject").resolves(
+        ok({
+          tid: "fake-tenant-id",
+        })
+      );
       sinon.stub(commonUtils, "getM365TenantFromEnv").callsFake(async (env: string) => {
         return "fake-tenant-id";
       });
@@ -514,9 +558,11 @@ suite("handlers", () => {
       const sendTelemetryEvent = sinon.stub(ExtTelemetry, "sendTelemetryEvent");
       const sendTelemetryErrorEvent = sinon.stub(ExtTelemetry, "sendTelemetryErrorEvent");
       sinon.stub(commonUtils, "getProvisionSucceedFromEnv").resolves(true);
-      sinon.stub(AppStudioTokenInstance, "getJsonObject").resolves({
-        tid: "fake-tenant-id",
-      });
+      sinon.stub(M365TokenInstance, "getJsonObject").resolves(
+        ok({
+          tid: "fake-tenant-id",
+        })
+      );
       sinon.stub(commonUtils, "getM365TenantFromEnv").callsFake(async (env: string) => {
         return "";
       });
@@ -593,8 +639,7 @@ suite("handlers", () => {
     sinon.stub(ExtTelemetry, "sendTelemetryEvent");
     sinon.stub(ExtTelemetry, "sendTelemetryErrorEvent");
     const deployArtifacts = sinon.spy(handlers.core, "deployArtifacts");
-    await handlers.deployAadAppManifest([]);
-
+    await handlers.deployAadAppManifest([{ fsPath: "path/aad.dev.template" }, "CodeLens"]);
     sinon.assert.calledOnce(deployArtifacts);
     chai.assert.equal(deployArtifacts.getCall(0).args[0]["include-aad-manifest"], "yes");
     sinon.restore();
