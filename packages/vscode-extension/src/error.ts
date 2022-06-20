@@ -13,6 +13,8 @@ export enum ExtensionErrors {
   UnknownSubscription = "UnknownSubscription",
   PortAlreadyInUse = "PortAlreadyInUse",
   PrerequisitesValidationError = "PrerequisitesValidationError",
+  PrerequisitesNoM365AccountError = "PrerequisitesNoM365AccountError",
+  PrerequisitesSideloadingDisabledError = "PrerequisitesSideloadingDisabledError",
   OpenExternalFailed = "OpenExternalFailed",
   FolderAlreadyExist = "FolderAlreadyExist",
   InvalidProject = "InvalidProject",
