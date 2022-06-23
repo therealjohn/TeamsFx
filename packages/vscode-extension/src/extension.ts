@@ -62,6 +62,7 @@ import {
 import { loadLocalizedStrings } from "./utils/localizeUtils";
 import { ExtensionSurvey } from "./utils/survey";
 import { ExtensionUpgrade } from "./utils/upgrade";
+import { TeamsAppDebugProvider, TeamsFxDebugTaskProvider } from "./debug/teamsAppDebugProvider";
 
 export let VS_CODE_UI: VsCodeUI;
 
@@ -104,6 +105,13 @@ export async function activate(context: vscode.ExtensionContext) {
     const taskProvider: TeamsfxTaskProvider = new TeamsfxTaskProvider();
     context.subscriptions.push(
       vscode.tasks.registerTaskProvider(TeamsfxTaskProvider.type, taskProvider)
+    );
+
+    const debugTaskProvider: TeamsFxDebugTaskProvider = new TeamsFxDebugTaskProvider(
+      workspaceUri?.fsPath ?? ""
+    );
+    context.subscriptions.push(
+      vscode.tasks.registerTaskProvider(TeamsFxDebugTaskProvider.TYPE, debugTaskProvider)
     );
 
     context.subscriptions.push(
@@ -786,8 +794,16 @@ function registerCodelensAndHoverProviders(context: vscode.ExtensionContext) {
 
 function registerDebugConfigProviders(context: vscode.ExtensionContext) {
   const debugProvider: TeamsfxDebugProvider = new TeamsfxDebugProvider();
+  const teamsAppDebugProvider: TeamsAppDebugProvider = new TeamsAppDebugProvider();
   context.subscriptions.push(
     vscode.debug.registerDebugConfigurationProvider("pwa-chrome", debugProvider)
+  );
+  context.subscriptions.push(
+    vscode.debug.registerDebugConfigurationProvider(
+      "pwa-msedge",
+      teamsAppDebugProvider,
+      vscode.DebugConfigurationProviderTriggerKind.Dynamic
+    )
   );
   context.subscriptions.push(
     vscode.debug.registerDebugConfigurationProvider("chrome", debugProvider)
