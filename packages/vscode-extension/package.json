@@ -825,6 +825,30 @@
         }
       },
       {
+        "name": "teamsfx-task-watch",
+        "label": "TeamsFx task watch",
+        "owner": "Teams Toolkit",
+        "source": "teamsfx",
+        "applyTo": "allDocuments",
+        "fileLocation": [
+          "relative",
+          "${workspaceFolder}"
+        ],
+        "pattern": [
+          {
+            "regexp": "^.*$",
+            "file": 0,
+            "location": 1,
+            "message": 2
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*",
+          "endsPattern": ".*"
+        }
+      },
+      {
         "name": "teamsfx-ngrok-watch",
         "label": "TeamsFx Ngrok Problems",
         "owner": "Teams Toolkit",

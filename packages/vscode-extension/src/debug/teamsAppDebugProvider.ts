@@ -64,7 +64,7 @@ export class TeamsAppDebugProvider implements DebugConfigurationProvider {
       type: "pwa-msedge",
       request: "launch",
       url: `https://teams.microsoft.com/l/app/${teamsAppId}?installAppPackage=true&webjoin=true&${accountHint}`,
-      preLaunchTask: `${fxTpl.spec.steps[0].name}`,
+      preLaunchTask: `teamsfx: ${fxTpl.spec.steps[0].name}`,
     };
   }
 }
@@ -110,9 +110,9 @@ export class TeamsFxDebugTaskProvider implements TaskProvider {
           new ShellExecution(step.parameter["cmd"] as string, {
             cwd: path.join(this.workspaceRoot, step.parameter["folder"] as string),
           }),
-          "$teamsfx-backend-watch"
+          "$teamsfx-task-watch"
         );
-        task.isBackground = step.parameter["background"] as boolean;
+        task.isBackground = step.parameter["isBackground"] as boolean;
         return task;
       });
     return tasks;
