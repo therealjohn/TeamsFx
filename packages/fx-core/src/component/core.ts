@@ -37,6 +37,8 @@ import "./resource/spfx";
 import "./feature/bot";
 import "./feature/sql";
 import "./feature/tab";
+import "./feature/cicd";
+import "./feature/apiConnector";
 import "./code/botCode";
 import "./code/tabCode";
 import "./code/apiCode";
@@ -313,7 +315,7 @@ export class TeamsfxCore {
           targetAction: `${componentConfig.hosting}.deploy`,
           required: false,
           inputs: {
-            folder: componentConfig.folder,
+            code: componentConfig,
           },
         });
       }

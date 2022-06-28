@@ -115,7 +115,6 @@ export enum TelemetryEvent {
   DebugPrereqsCheckPorts = "debug-prereqs-check-ports",
   DebugPrereqsCheckCert = "debug-prereqs-check-cert",
   DebugPrereqsCheckDependencies = "debug-prereqs-check-dependencies",
-  DebugPrereqsEnsureDependencies = "debug-prereqs-ensure-dependencies",
   DebugPrereqsInstallPackages = "debug-prereqs-install-packages",
   DebugPreCheckCoreLocalDebug = "debug-precheck-core-local-debug",
   DebugTaskProvider = "debug-task-provider",
@@ -213,7 +212,10 @@ export enum TelemetryProperty {
   DebugRemote = "remote",
   DebugAppId = "debug-appid",
   DebugProjectComponents = "debug-project-components",
+  DebugDevCertStatus = "debug-dev-cert-status",
   DebugCheckResults = "debug-check-results",
+  DebugCheckResultsSafe = "debug-check-results-safe",
+  DebugErrorCodes = "debug-error-codes",
   DebugNpmInstallName = "debug-npm-install-name",
   DebugNpmInstallExitCode = "debug-npm-install-exit-code",
   DebugNpmInstallErrorMessage = "debug-npm-install-error-message",
@@ -223,6 +225,7 @@ export enum TelemetryProperty {
   DebugServiceExitCode = "debug-service-exit-code",
   DebugPrereqsDepsType = "debug-prereqs-deps-type",
   DebugFailedServices = "debug-failed-services",
+  DebugPortsInUse = "debug-ports-in-use",
   Internal = "internal",
   InternalAlias = "internal-alias",
   OSArch = "os-arch",
@@ -308,6 +311,13 @@ export enum TelemetrySurveyDataProperty {
   Q4Result = "q4-result",
   Q5Title = "q5-title",
   Q5Result = "q5-result",
+}
+
+export enum TelemetryDebugDevCertStatus {
+  Disabled = "disabled",
+  AlreadyTrusted = "already-trusted",
+  Trusted = "trusted",
+  NotTrusted = "not-trusted",
 }
 
 export const TelemetryComponentType = "extension";
