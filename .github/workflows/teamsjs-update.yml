@@ -1,0 +1,31 @@
+name: Teams JS SDK Released
+on:
+  workflow_dispatch:
+
+jobs:
+  myEvent:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Release Content
+        id: get_release_content
+        run: |
+          name="v2.0.0"
+          subject="Teams JS SDK has released a new version $name"
+          baseUrl="https://github.com/OfficeDev/microsoft-teams-library-js/releases/tag/"
+          body="Please check the release detail from <a href=\\\"$baseUrl$name\\\">here</a>."
+
+          echo "::set-output name=body::$body"
+          echo "::set-output name=subject::$subject"
+
+      - name: Report Relase
+        uses: satak/webrequest-action@master
+        with:
+          url: https://prod-30.eastus.logic.azure.com:443/workflows/9aa865da96054bd89749c2d4ce68df8e/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uIoB06NUHSnKoZeWjNDI9t4rrhbTBKxJNiBtDoMRSQs
+          method: POST
+          payload: |
+            {
+              "to": "nintan@microsoft.com",
+              "body": "${{ steps.get_release_content.outputs.body }}",
+              "subject": "${{ steps.get_release_content.outputs.subject }}",
+              "apiKey": "${{ secrets.MAIL_API_KEY }}"
+            }
