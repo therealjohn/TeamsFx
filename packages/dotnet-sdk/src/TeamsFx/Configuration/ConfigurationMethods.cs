@@ -4,35 +4,17 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
-using Microsoft.TeamsFx;
-using Microsoft.TeamsFx.Configuration;
 using Microsoft.TeamsFx.Helper;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.TeamsFx.Credential;
 
-namespace Microsoft.Extensions.DependencyInjection;
+namespace Microsoft.TeamsFx.Configuration;
 
 /// <summary>
 /// Service Registration
 /// </summary>
 public static class TeamsFxConfigurationMethods
 {
-    /// <summary>
-    /// Add TeamsFx bot related SDK.
-    /// </summary>
-    /// <param name="services">service collection for DI</param>
-    /// <param name="namedConfigurationSection">configuration instance</param>
-    /// <returns></returns>
-    public static IServiceCollection AddTeamsFxBot(
-        this IServiceCollection services,
-        IConfiguration namedConfigurationSection)
-    {
-        services.AddHttpClient();
-        services.AddOptions();
-        services.AddScoped<TeamsFx.TeamsFx>();
-
-        services.AddOptions<AuthenticationOptions>().Bind(namedConfigurationSection.GetSection(AuthenticationOptions.Authentication)).ValidateDataAnnotations();
-        return services;
-    }
-
     /// <summary>
     /// Add TeamsFx SDK.
     /// </summary>
@@ -45,10 +27,17 @@ public static class TeamsFxConfigurationMethods
     {
         services.AddHttpClient();
         services.AddOptions();
-        services.AddScoped<TeamsFx.TeamsFx>();
+        services.AddScoped<TeamsFx>();
         services.AddScoped<TeamsUserCredential>();
 
         services.AddOptions<AuthenticationOptions>().Bind(namedConfigurationSection.GetSection(AuthenticationOptions.Authentication)).ValidateDataAnnotations();
+        services.AddOptions<BotAuthenticationOptions>().Configure<IOptions<AuthenticationOptions>>((botAuthOption, authOptions) => {
+            AuthenticationOptions authOptionsValue = authOptions.Value;
+            botAuthOption.ClientId = authOptionsValue.ClientId;
+            botAuthOption.TenantId = authOptionsValue.TenantId;
+            botAuthOption.ApplicationIdUri = authOptionsValue.ApplicationIdUri;
+        }).ValidateDataAnnotations();
+        
         services.AddSingleton<IIdentityClientAdapter>(sp => {
             var authenticationOptions = sp.GetRequiredService<IOptions<AuthenticationOptions>>().Value;
             var builder = ConfidentialClientApplicationBuilder.Create(authenticationOptions.ClientId)
@@ -57,7 +46,8 @@ public static class TeamsFxConfigurationMethods
             var identityClientAdapter = new IdentityClientAdapter(builder.Build());
             return identityClientAdapter;
         });
-
+        services.AddSingleton<OnBehalfOfUserCredential>();
+        
         return services;
     }
 
@@ -73,7 +63,7 @@ public static class TeamsFxConfigurationMethods
     {
         services.AddHttpClient();
         services.AddOptions();
-        services.AddScoped<TeamsFx.TeamsFx>();
+        services.AddScoped<TeamsFx>();
         services.AddScoped<TeamsUserCredential>();
 
         services.Configure(configureOptions);
@@ -105,7 +95,7 @@ public static class TeamsFxConfigurationMethods
     {
         services.AddHttpClient();
         services.AddOptions();
-        services.AddScoped<TeamsFx.TeamsFx>();
+        services.AddScoped<TeamsFx>();
         services.AddScoped<TeamsUserCredential>();
 
         services.AddOptions<AuthenticationOptions>()

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using Microsoft.Bot.Schema;
-namespace Microsoft.TeamsFx;
+namespace Microsoft.TeamsFx.Bot;
 
 /// <summary>
 /// Token response provided by Teams Bot SSO prompt

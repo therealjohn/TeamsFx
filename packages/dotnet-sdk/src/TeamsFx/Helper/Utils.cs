@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 namespace Microsoft.TeamsFx.Helper;
 
+using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client;
 using System.IdentityModel.Tokens.Jwt;
 
 static internal class Utils
@@ -61,5 +63,39 @@ static internal class Utils
             userInfo.PreferredUserName = tokenObject.Payload["upn"].ToString();
         }
         return userInfo;
+    }
+
+    static internal async ValueTask<global::Azure.Core.AccessToken> GetAccessTokenByOnBehalfOfFlow(string ssoToken, IEnumerable<string> scopes, IIdentityClientAdapter identityClientAdapter, ILogger logger)
+    {
+        logger.LogTrace($"Get access token from authentication server with scopes: {string.Join(' ', scopes)}");
+
+        try
+        {
+            logger.LogDebug("Acquiring token via on-behalf-of flow.");
+            var result = await identityClientAdapter
+                .GetAccessToken(ssoToken, scopes)
+                .ConfigureAwait(false);
+
+            var accessToken = new global::Azure.Core.AccessToken(result.AccessToken, result.ExpiresOn);
+            return accessToken;
+        }
+        catch (MsalUiRequiredException) // Need user interaction
+        {
+            var fullErrorMsg = $"Failed to get access token from OAuth identity server, please login(consent) first";
+            logger.LogWarning(fullErrorMsg);
+            throw new ExceptionWithCode(fullErrorMsg, ExceptionCode.UiRequiredError);
+        }
+        catch (MsalServiceException ex) // Errors that returned from AAD service
+        {
+            var fullErrorMsg = $"Failed to get access token from OAuth identity server with error: {ex.ResponseBody}";
+            logger.LogWarning(fullErrorMsg);
+            throw new ExceptionWithCode(fullErrorMsg, ExceptionCode.ServiceError);
+        }
+        catch (MsalClientException ex) // Exceptions that are local to the MSAL library
+        {
+            var fullErrorMsg = $"Failed to get access token with error: {ex.Message}";
+            logger.LogWarning(fullErrorMsg);
+            throw new ExceptionWithCode(fullErrorMsg, ExceptionCode.InternalError);
+        }
     }
 }

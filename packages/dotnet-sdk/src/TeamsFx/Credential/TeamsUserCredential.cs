@@ -12,7 +12,7 @@ using System.Net;
 
 using AccessToken = Microsoft.TeamsFx.Model.AccessToken;
 
-namespace Microsoft.TeamsFx;
+namespace Microsoft.TeamsFx.Credential;
 
 /// <summary>
 /// Represent Teams current user's identity, and it is used within Teams tab application.

@@ -1,8 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Microsoft.TeamsFx;
+using Azure.Core;
+using Microsoft.TeamsFx.Configuration;
+using Microsoft.TeamsFx.Helper;
 using System.ComponentModel.DataAnnotations;
+
+namespace Microsoft.TeamsFx.Bot;
 
 /// <summary>
 /// Contains settings for an <see cref="TeamsBotSsoPrompt"/>.
@@ -13,14 +17,12 @@ public class TeamsBotSsoPromptSettings
     /// <summary>
     /// Constructor of TeamsBotSsoPromptSettings
     /// </summary>
-    public TeamsBotSsoPromptSettings(string[] scopes, string clientId, string tenantId, string applicationIdUri, int timeout = 900000, bool endOnInvalidMessage = true)
+    public TeamsBotSsoPromptSettings(BotAuthenticationOptions botAuthOptions, string[] scopes, TimeSpan? timeout = null, bool? endOnInvalidMessage = null)
     {
+        BotAuthOptions = botAuthOptions;
         Scopes = scopes;
-        Timeout = timeout;
-        EndOnInvalidMessage = endOnInvalidMessage;
-        ClientId = clientId;
-        TenantId = tenantId;
-        ApplicationIdUri = applicationIdUri;
+        Timeout = timeout ?? TimeSpan.FromMinutes(15);
+        EndOnInvalidMessage = endOnInvalidMessage ?? true;
     }
 
     /// <summary>
@@ -35,7 +37,7 @@ public class TeamsBotSsoPromptSettings
     /// Default is 900,000 (15 minutes).
     /// </summary>
     /// <value>The number of milliseconds the prompt waits for the user to authenticate.</value>
-    public int Timeout { get; set; } = (int)TimeSpan.FromMinutes(15).TotalMilliseconds;
+    public TimeSpan Timeout { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the <see cref="TeamsBotSsoPrompt"/> should end upon
@@ -46,25 +48,10 @@ public class TeamsBotSsoPromptSettings
     /// </summary>
     /// <value>True if the <see cref="TeamsBotSsoPrompt"/> should automatically end upon receiving
     /// an invalid message.</value>
-    public bool EndOnInvalidMessage { get; set; } = true;
+    public bool EndOnInvalidMessage { get; set; }
 
     /// <summary>
-    /// The client (application) ID of an App Registration in the tenant.
+    /// Gets or sets bot related authentication options.
     /// </summary>
-    [Required(ErrorMessage = "Client id is required")]
-    [RegularExpression(@"^[0-9A-Fa-f\-]{36}$")]
-    public string ClientId { get; set; }
-
-    /// <summary>
-    /// AAD tenant id.
-    /// </summary>
-    [Required(ErrorMessage = "Tenant id is required")]
-    [RegularExpression(@"^[0-9A-Fa-f\-]{36}$")]
-    public string TenantId { get; set; }
-
-    /// <summary>
-    /// Application ID URI.
-    /// </summary>
-    [Required(ErrorMessage = "Application id uri is required")]
-    public string ApplicationIdUri { get; set; }
+    public BotAuthenticationOptions BotAuthOptions { get; set; }
 }

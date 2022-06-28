@@ -8,13 +8,14 @@ using Microsoft.Bot.Builder.Teams;
 using Microsoft.Bot.Schema.Teams;
 using Microsoft.Bot.Schema;
 using System.Text.RegularExpressions;
-using System.ComponentModel.DataAnnotations;
 using System.Net;
 using Azure.Core;
-using System.IdentityModel.Tokens.Jwt;
 using Newtonsoft.Json.Linq;
+using Microsoft.Bot.Connector;
+using Microsoft.TeamsFx.Helper;
+using Microsoft.TeamsFx.Credential;
 
-namespace Microsoft.TeamsFx;
+namespace Microsoft.TeamsFx.Bot;
 
 /// <summary>
 /// Creates a new prompt that leverage Teams Single Sign On (SSO) support for bot to automatically sign in user and
@@ -29,7 +30,9 @@ namespace Microsoft.TeamsFx;
 public class TeamsBotSsoPrompt : Dialog
 {
     private TeamsBotSsoPromptSettings _settings;
+    private OnBehalfOfUserCredential _oboCredential;
     private const string PersistedExpires = "expires";
+
     #region Util
     private readonly ILogger<TeamsBotSsoPrompt> _logger;
     #endregion
@@ -42,38 +45,20 @@ public class TeamsBotSsoPrompt : Dialog
     /// <param name="logger">Logger of TeamsBotSsoPrompt Class.</param>
     /// <param name="settings">Additional OAuth settings to use with this instance of the prompt.
     /// custom validation for this prompt.</param>
+    /// <param name="oboCredential"> On-behalf-of user credential</param>
     /// <remarks>The value of <paramref name="dialogId"/> must be unique within the
     /// <see cref="DialogSet"/> or <see cref="ComponentDialog"/> to which the prompt is added.</remarks>
-    public TeamsBotSsoPrompt(string dialogId, TeamsBotSsoPromptSettings settings, ILogger<TeamsBotSsoPrompt> logger) : base(dialogId)
+    public TeamsBotSsoPrompt(string dialogId, TeamsBotSsoPromptSettings settings, OnBehalfOfUserCredential oboCredential, ILogger<TeamsBotSsoPrompt> logger = null) : base(dialogId)
     {
         _logger = logger;
+        _oboCredential = oboCredential;
         if (string.IsNullOrWhiteSpace(dialogId))
         {
             throw new ArgumentNullException(nameof(dialogId));
         }
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-        ValidateTeamsBotSsoPromptSettings(_settings);
 
-        _logger.LogInformation("Create a teams bot sso prompt");
-    }
-
-    private void ValidateTeamsBotSsoPromptSettings(TeamsBotSsoPromptSettings settings)
-    {
-        _logger.LogTrace("Validate teams bot sso prompt settings.");
-        var results = new List<ValidationResult>();
-        var isValid = Validator.TryValidateObject(settings, new ValidationContext(settings), results, true);
-        if (isValid)
-        {
-            _logger.LogInformation("Teams bot sso prompt settings are valid");
-        } else
-        {
-            string errorMessage = "Teams bot sso prompt settings are missing or not correct with error: ";
-            foreach (var validationResult in results)
-            {
-                errorMessage += validationResult.ErrorMessage + ". ";
-            }
-            throw new ExceptionWithCode(errorMessage, ExceptionCode.InvalidConfiguration);
-        }
+        _logger?.LogInformation("Create a teams bot sso prompt");
     }
 
 
@@ -91,7 +76,7 @@ public class TeamsBotSsoPrompt : Dialog
     /// </remarks>
     public override async Task<DialogTurnResult> BeginDialogAsync(DialogContext dc, object options = null, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Begin teams bot sso prompt dialog");
+        _logger?.LogInformation("Begin teams bot sso prompt dialog");
         if (dc == null)
         {
             throw new ArgumentNullException(nameof(dc));
@@ -100,7 +85,7 @@ public class TeamsBotSsoPrompt : Dialog
         EnsureMsTeamsChannel(dc);
 
         var state = dc.ActiveDialog?.State;
-        state[PersistedExpires] = DateTime.UtcNow.AddMilliseconds(_settings.Timeout);
+        state[PersistedExpires] = DateTime.UtcNow.AddMilliseconds(_settings.Timeout.TotalMilliseconds);
 
         // Send OAuthCard that tells Teams to obtain an authentication token for the bot application.
         await SendOAuthCardToObtainTokenAsync(dc.Context, cancellationToken).ConfigureAwait(false);
@@ -124,7 +109,7 @@ public class TeamsBotSsoPrompt : Dialog
     /// <seealso cref="DialogContext.ContinueDialogAsync(CancellationToken)"/>
     public override async Task<DialogTurnResult> ContinueDialogAsync(DialogContext dc, CancellationToken cancellationToken = default(CancellationToken))
     {
-        _logger.LogInformation("Teams bot sso prompt continue dialog");
+        _logger?.LogInformation("Teams bot sso prompt continue dialog");
         EnsureMsTeamsChannel(dc);
 
         // Check for timeout
@@ -140,7 +125,7 @@ public class TeamsBotSsoPrompt : Dialog
         bool hasTimedOut = isTimeoutActivityType && DateTime.Compare(DateTime.UtcNow, (DateTime)state[PersistedExpires]) > 0;
         if (hasTimedOut)
         {
-            _logger.LogWarning("End Teams Bot SSO Prompt due to timeout");
+            _logger?.LogWarning("End Teams Bot SSO Prompt due to timeout");
             return await dc.EndDialogAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
         }
         else
@@ -157,7 +142,7 @@ public class TeamsBotSsoPrompt : Dialog
             }
             else if (isMessage && _settings.EndOnInvalidMessage)
             {
-                _logger.LogWarning("End Teams Bot SSO Prompt due to invalid message");
+                _logger?.LogWarning("End Teams Bot SSO Prompt due to invalid message");
                 return await dc.EndDialogAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
             }
 
@@ -182,7 +167,7 @@ public class TeamsBotSsoPrompt : Dialog
 
         if (IsTokenExchangeRequestInvoke(context))
         {
-            _logger.LogDebug("Receive token exchange request");
+            _logger?.LogDebug("Receive token exchange request");
 
             var tokenResponseObject = context.Activity.Value as JObject;
             string ssoToken = tokenResponseObject?.ToObject<TokenExchangeInvokeRequest>().Token;
@@ -191,40 +176,50 @@ public class TeamsBotSsoPrompt : Dialog
             {
                 var warningMsg =
                   "The bot received an InvokeActivity that is missing a TokenExchangeInvokeRequest value. This is required to be sent with the InvokeActivity.";
-                _logger.LogWarning(warningMsg);
+                _logger?.LogWarning(warningMsg);
                 await SendInvokeResponseAsync(context, HttpStatusCode.BadRequest, warningMsg, cancellationToken).ConfigureAwait(false);
             }
             else
             {
-                // TODO: Use ssoToken to construct obo credential and exchange access token for the given scope
-                // 1. create oboCredential instance using ssoToken
-                // 2. try use the oboCredential to get exchanged token for the given scopes
-                AccessToken exchangedToken;
                 try
                 {
-                    exchangedToken = new AccessToken("accessToken", new DateTimeOffset());
-                    await SendInvokeResponseAsync(context, HttpStatusCode.OK, null, cancellationToken).ConfigureAwait(false);
-
-                    var ssoTokenJwt = new JwtSecurityToken(ssoToken);
+                    _logger?.LogDebug("Acquiring access token via on behalf of flow.");
+                    _oboCredential.SetSsoToken(ssoToken);
+                    var accessToken = await _oboCredential.GetTokenAsync(new TokenRequestContext(_settings.Scopes), cancellationToken).ConfigureAwait(false);
+                    var ssoTokenObj = Utils.ParseJwt(ssoToken);
                     tokenResponse = new TeamsBotSsoPromptTokenResponse {
                         SsoToken = ssoToken,
-                        SsoTokenExpiration = ssoTokenJwt.ValidTo.ToString(),
-                        Token = exchangedToken.Token,
-                        Expiration = exchangedToken.ExpiresOn.ToString()
+                        SsoTokenExpiration = ssoTokenObj.Payload["exp"].ToString(),
+                        Token = accessToken.Token,
+                        Expiration = accessToken.ExpiresOn.ToString()
                     };
+
+                    await SendInvokeResponseAsync(context, HttpStatusCode.OK, null, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
-                    var warningMsg = "The bot is unable to exchange token. Ask for user consent.";
-                    _logger.LogInformation(warningMsg);
-                    await SendInvokeResponseAsync(context, HttpStatusCode.PreconditionFailed, warningMsg, cancellationToken).ConfigureAwait(false);
+                    var warningMsg = "The bot is unable to exchange token. Ask for user consent." + e.Message;
+                    _logger?.LogInformation(warningMsg);
+
+                    await context.SendActivityAsync(
+                        new Activity {
+                            Type = ActivityTypesEx.InvokeResponse,
+                            Value = new InvokeResponse {
+                                Status = (int)HttpStatusCode.PreconditionFailed,
+                                Body = new TokenExchangeInvokeResponse {
+                                    Id = context.Activity.Id,
+                                    FailureDetail = warningMsg
+                                },
+                            },
+                        }, cancellationToken).ConfigureAwait(false);
+                    //await SendInvokeResponseAsync(context, HttpStatusCode.PreconditionFailed, warningMsg, cancellationToken).ConfigureAwait(false);
                 }
 
             }
         }
         else if (IsTeamsVerificationInvoke(context))
         {
-            _logger.LogCritical("Receive Teams state verification request");
+            _logger?.LogCritical("Receive Teams state verification request");
             await SendOAuthCardToObtainTokenAsync(context, cancellationToken).ConfigureAwait(false);
             await SendInvokeResponseAsync(context, HttpStatusCode.OK, null, cancellationToken).ConfigureAwait(false);
         }
@@ -253,7 +248,7 @@ public class TeamsBotSsoPrompt : Dialog
     }
 
     private bool IsTeamsVerificationInvoke(ITurnContext context) {
-       return (context.Activity.Type == ActivityTypes.Message) && (context.Activity.Name == SignInConstants.VerifyStateOperationName);
+       return (context.Activity.Type == ActivityTypes.Invoke) && (context.Activity.Name == SignInConstants.VerifyStateOperationName);
     }
     private bool IsTokenExchangeRequestInvoke(ITurnContext context) {
         return (context.Activity.Type == ActivityTypes.Invoke) && (context.Activity.Name == SignInConstants.TokenExchangeOperationName);
@@ -268,10 +263,10 @@ public class TeamsBotSsoPrompt : Dialog
     /// <returns>The task to await.</returns>
     private async Task SendOAuthCardToObtainTokenAsync(ITurnContext context, CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Send OAuth card to get SSO token");
+        _logger?.LogDebug("Send OAuth card to get SSO token");
 
         TeamsChannelAccount account = await TeamsInfo.GetMemberAsync(context, context.Activity.From.Id, cancellationToken).ConfigureAwait(false);
-        _logger.LogDebug(
+        _logger?.LogDebug(
           "Get Teams member account user principal name: " + account.UserPrincipalName
         );
 
@@ -310,18 +305,18 @@ public class TeamsBotSsoPrompt : Dialog
     /// <returns>sign in resource</returns>
     private SignInResource GetSignInResource(string loginHint)
     {
-        _logger.LogDebug("Get sign in authentication configuration");
-        string signInLink = $"bot-auth-start?scope={Uri.EscapeDataString(string.Join(" ", _settings.Scopes))}&clientId={_settings.ClientId}&tenantId={_settings.TenantId}&loginHint={loginHint}";
-        _logger.LogDebug("Sign in link: " + signInLink);
+        _logger?.LogDebug("Get sign in authentication configuration");
+        string signInLink = $"bot-auth-start?scope={Uri.EscapeDataString(string.Join(" ", _settings.Scopes))}&clientId={_settings.BotAuthOptions.ClientId}&tenantId={_settings.BotAuthOptions.TenantId}&loginHint={loginHint}";
+        _logger?.LogDebug("Sign in link: " + signInLink);
 
         SignInResource signInResource = new SignInResource {
             SignInLink = signInLink,
             TokenExchangeResource = new TokenExchangeResource {
                 Id = Guid.NewGuid().ToString(),
-                Uri = Regex.Replace(_settings.ApplicationIdUri, @"/\/$/", "/access_as_user")
+                Uri = Regex.Replace(_settings.BotAuthOptions.ApplicationIdUri, @"/\/$/", "/access_as_user")
             }
         };
-        _logger.LogDebug("Token exchange resource uri: " + signInResource.TokenExchangeResource.Uri);
+        _logger?.LogDebug("Token exchange resource uri: " + signInResource.TokenExchangeResource.Uri);
 
         return signInResource;
     }
@@ -333,10 +328,10 @@ public class TeamsBotSsoPrompt : Dialog
     /// <exception cref="ExceptionCode.ChannelNotSupported"> if bot channel is not MS Teams </exception>
     private void EnsureMsTeamsChannel(DialogContext dc)
     {
-        if (dc.Context.Activity.ChannelId != Bot.Connector.Channels.Msteams)
+        if (dc.Context.Activity.ChannelId != Channels.Msteams)
         {
             var errorMessage = "Teams Bot SSO Prompt is only supported in MS Teams Channel";
-            _logger.LogError(errorMessage);
+            _logger?.LogError(errorMessage);
             throw new ExceptionWithCode(errorMessage, ExceptionCode.ChannelNotSupported);
         }
     }

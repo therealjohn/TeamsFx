@@ -5,6 +5,7 @@ using Azure.Core;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
+using Microsoft.TeamsFx.Credential;
 
 namespace Microsoft.TeamsFx;
 
